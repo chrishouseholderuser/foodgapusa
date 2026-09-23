@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://chrishouseholderuser.github.io/foodgapusa/sitemap.xml
+Sitemap: https://www.foodgapusa.com/sitemap.xml
