@@ -1,0 +1,1723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>The Food Gap — Food-Desert Severity Across the United States</title>
+<meta name="description" content="An interactive map of 2,083 U.S. counties with food deserts, shaded by severity using USDA Food Access Research Atlas and related public data." />
+<meta name="robots" content="index,follow" />
+<link rel="canonical" href="https://chrishouseholderuser.github.io/foodgapusa/" />
+<meta property="og:title" content="The Food Gap — Food-Desert Severity Across the United States" />
+<meta property="og:description" content="All 2,083 U.S. counties containing food deserts: severity, poverty, income and store access — built on USDA, CDC, Census and BLS data." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://chrishouseholderuser.github.io/foodgapusa/" />
+<meta property="og:image" content="https://chrishouseholderuser.github.io/foodgapusa/og-image.png" />
+<meta property="og:image:alt" content="The Food Gap — food-desert severity across the United States" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://chrishouseholderuser.github.io/foodgapusa/og-image.png" />
+<meta name="theme-color" content="#0b0f14" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preload" href="maplibre-gl.css" as="style" />
+<link rel="preload" href="data.js" as="script" />
+<link rel="preload" href="maplibre-gl.js" as="script" />
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+<link href="maplibre-gl.css" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#12181f; --panel-2:#0e141b; --line:#232c37;
+    --text:#e7edf3; --muted:#9aa7b4; --faint:#8492a1; --accent:#f0562e;
+    --minor:#fdcc5c; --moderate:#fb9a3c; --severe:#f0562e; --critical:#e64545;
+    --good:#4bb377; --shadow:0 10px 40px rgba(0,0,0,.45);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .noscript{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--text)}
+  .noscript div{max-width:680px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow);line-height:1.55}
+  .noscript h1{margin:0 0 12px;font-size:24px;line-height:1.15}
+  .noscript p{margin:0 0 10px;color:var(--muted)}
+  .noscript p:last-child{margin-bottom:0}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip-link{position:absolute;z-index:50;top:10px;left:10px;transform:translateY(-160%);background:#fff;color:#0b0f14;
+    padding:10px 14px;border-radius:8px;font-weight:800;text-decoration:none;box-shadow:var(--shadow)}
+  .skip-link:focus{transform:translateY(0)}
+  #map{position:absolute;inset:0}
+  .maplibregl-ctrl-attrib{font-size:10px;opacity:.7}
+  button{font-family:inherit}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 0 6px rgba(240,86,46,.45)}
+  header{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 20px;
+    background:linear-gradient(180deg,rgba(8,11,15,.92),rgba(8,11,15,.55) 70%,transparent);pointer-events:none}
+  header .brand{pointer-events:auto;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .wordmark{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .wordmark .dot{color:var(--accent)}
+  .tagline{font-size:12.5px;color:var(--muted);font-weight:500}
+  header .spacer{flex:1}
+  .hstat{pointer-events:auto;display:flex;gap:20px;align-items:center;margin-right:4px}
+  .hstat .n{font-size:15px;font-weight:700}
+  .hstat .l{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+  .btn-ghost{pointer-events:auto;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
+    min-height:40px;padding:8px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;flex:none}
+  .btn-ghost:hover{background:rgba(255,255,255,.12)}
+  #lang-toggle{display:none}
+  .lang-toggle{min-width:86px}
+  .mobile-tools{display:none;position:absolute;z-index:7;left:20px;right:20px;top:118px;gap:8px}
+  .mobile-tools .btn-ghost{flex:1;background:rgba(18,24,31,.92);backdrop-filter:blur(8px);box-shadow:var(--shadow)}
+  .filters .sheet-close{display:none}
+  .search{position:absolute;z-index:8;top:64px;right:20px;width:300px;max-width:calc(100vw - 40px)}
+  .search input{width:100%;padding:11px 14px;border-radius:11px;border:1px solid var(--line);
+    min-height:44px;background:rgba(18,24,31,.92);color:var(--text);font-size:14px;backdrop-filter:blur(8px);box-shadow:var(--shadow)}
+  .search input::placeholder{color:var(--faint)}
+  .results{margin-top:6px;background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden;
+    box-shadow:var(--shadow);display:none;max-height:340px;overflow-y:auto}
+  .results.open{display:block}
+  .results button{display:block;width:100%;min-height:44px;padding:9px 13px;font-size:13px;cursor:pointer;border:0;border-bottom:1px solid var(--line);
+    background:transparent;color:var(--text);text-align:left}
+  .results button:last-child{border-bottom:0}
+  .results button:hover,.results button:focus-visible{background:rgba(240,86,46,.14)}
+  .results .empty-result{padding:13px 14px;color:var(--muted);font-size:13px;line-height:1.45}
+  .r-sub{color:var(--muted);font-size:11.5px}
+  .filters{position:absolute;z-index:5;top:120px;right:20px;width:300px;max-width:calc(100vw - 40px);
+    background:rgba(18,24,31,.92);border:1px solid var(--line);border-radius:13px;padding:13px 14px;backdrop-filter:blur(8px);box-shadow:var(--shadow)}
+  .filters h4{margin:0 0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700}
+  .filters h4.mt{margin-top:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{display:flex;align-items:center;gap:7px;min-height:36px;padding:6px 10px;border-radius:20px;border:1px solid var(--line);
+    background:transparent;color:var(--text);font-size:12.5px;cursor:pointer;transition:.15s;user-select:none}
+  .chip .sw{width:10px;height:10px;border-radius:50%}
+  .chip.off{opacity:.4}
+  .seg{display:flex;gap:0;margin-top:11px;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{flex:1;min-height:38px;background:transparent;border:0;color:var(--muted);padding:7px 0;font-size:12.5px;cursor:pointer}
+  .seg button.active{background:rgba(240,86,46,.2);color:#fff;font-weight:600}
+  .th-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:9px;cursor:pointer;user-select:none}
+  .th-row input{accent-color:var(--accent);flex:none;min-width:24px;min-height:24px}
+  .th-row b{color:var(--text);font-weight:700}
+  .filters input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;margin:2px 0}
+  .filters input[type=range][disabled]{opacity:.4}
+  .filter-toast{position:absolute;z-index:9;top:318px;right:20px;width:300px;max-width:calc(100vw - 40px);display:none;
+    align-items:center;gap:8px;background:rgba(18,24,31,.96);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:10px 10px 10px 12px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+  .filter-toast.open{display:flex}
+  .filter-toast span{flex:1;color:var(--text);font-size:12.5px;font-weight:650;line-height:1.35}
+  .filter-toast button{min-height:34px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--text);
+    padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
+  .filter-toast button:hover{background:rgba(255,255,255,.14)}
+  .filter-toast .toast-close{width:34px;min-width:34px;padding:0;font-size:17px;line-height:1}
+  .legend{position:absolute;z-index:5;bottom:26px;left:20px;width:244px;
+    background:rgba(18,24,31,.92);border:1px solid var(--line);border-radius:13px;padding:14px;backdrop-filter:blur(8px);box-shadow:var(--shadow)}
+  .legend h4{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700}
+  .ramp{display:flex;height:9px;border-radius:5px;overflow:hidden;margin-bottom:6px}
+  .ramp span{flex:1}
+  .ramp-labels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+  .legend .note{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.5}
+  .legend .note b{color:var(--text)}
+  .basemap-notice{position:absolute;z-index:7;left:20px;bottom:152px;width:244px;display:none;background:rgba(18,24,31,.94);
+    border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:10px 12px;color:var(--text);
+    font-size:12px;line-height:1.45;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+  .basemap-notice.open{display:block}
+  .panel{position:absolute;z-index:6;top:0;right:0;height:100%;width:410px;max-width:100vw;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));border-left:1px solid var(--line);
+    box-shadow:-14px 0 50px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:0}
+  .panel.open{transform:translateX(0)}
+  .panel .close{position:absolute;top:14px;right:14px;z-index:10;width:44px;height:44px;border-radius:9px;border:1px solid var(--line);
+    background:rgba(255,255,255,.06);color:var(--text);font-size:18px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+  .panel .close:hover{background:rgba(255,255,255,.14)}
+  .p-hero{padding:22px 22px 18px;border-bottom:1px solid var(--line);position:relative}
+  .tier-chip{display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 58px);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;line-height:1.25;padding:5px 10px;border-radius:20px;color:#0b0f14}
+  .p-hero h2{margin:13px 0 3px;font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .p-hero h2:focus{outline:none}
+  .p-hero .loc{color:var(--muted);font-size:13px}
+  .setting-badge{display:inline-block;margin-left:8px;font-size:10.5px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);text-transform:capitalize;vertical-align:middle}
+  .score-row{display:flex;align-items:baseline;gap:8px;margin-top:16px}
+  .score-row .big{font-size:40px;font-weight:800;line-height:1;letter-spacing:-.03em}
+  .score-row .lbl{color:var(--muted);font-size:12px;margin-left:2px}
+  .panel-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+  .copylink{min-height:42px;background:var(--accent);border:0;color:#fff;font-weight:600;font-size:12.5px;padding:9px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .copylink:hover{filter:brightness(1.08)}
+  .copylink.secondary{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);font-weight:600}
+  .copylink.secondary:hover{background:rgba(255,255,255,.12);filter:none}
+  .csv-dl{margin-top:8px}
+  .narrative{padding:16px 22px;font-size:13.5px;line-height:1.6;color:#cbd5df;border-bottom:1px solid var(--line)}
+  .narrative b{color:#fff}
+  .section-t{padding:16px 22px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 18px 6px}
+  .stat{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:11px;padding:12px 13px}
+  .stat .v{font-size:19px;font-weight:750;letter-spacing:-.01em}
+  .stat .k{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .cmp{padding:6px 22px 8px}
+  .cmp-row{margin:13px 0}
+  .cmp-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+  .cmp-head .k{color:var(--muted)}
+  .cmp-head .v{font-weight:700}
+  .track{position:relative;height:8px;background:rgba(255,255,255,.07);border-radius:5px}
+  .fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+  .natmark{position:absolute;top:-4px;bottom:-4px;width:2px;background:#e7edf3;border-radius:2px}
+  .natmark::after{content:"";position:absolute;top:-4px;left:-2px;width:6px;height:6px;border-radius:50%;background:#e7edf3}
+  .cmp-note{padding:0 22px 4px;font-size:11px;color:var(--faint);display:flex;align-items:center;gap:7px}
+  .cmp-note i{display:inline-block;width:2px;height:11px;background:#e7edf3;border-radius:2px;flex:none}
+  .worst{padding:2px 22px 6px}
+  .worst-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .worst-row:last-child{border-bottom:0}
+  .worst-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .worst-n{flex:1;color:var(--text)}
+  .worst-s{color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+  .p-foot{padding:16px 22px 30px;font-size:11px;color:var(--faint);line-height:1.5;border-top:1px solid var(--line);margin-top:8px}
+  .p-foot b{color:var(--muted)}
+  .p-nav{padding:14px 22px 0;display:flex;flex-direction:column;gap:8px}
+  .p-back{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+  .p-back:hover{background:rgba(255,255,255,.12)}
+  .p-crumb{font-size:12px;color:var(--muted);margin:0;line-height:1.45}
+  .p-crumb button{background:none;border:0;color:var(--accent);font:inherit;font-weight:650;cursor:pointer;padding:0;min-height:0}
+  .p-crumb button:hover{text-decoration:underline}
+  .p-crumb .sep{margin:0 6px;color:var(--faint)}
+  .p-crumb .here{color:var(--text);font-weight:650}
+  .th-help{margin:0 0 8px;font-size:11px;line-height:1.45;color:var(--muted)}
+  .cmp-mode{display:flex;gap:6px;margin:8px 0 4px}
+  .cmp-mode button{flex:1;min-height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+  .cmp-mode button.active{background:rgba(240,86,46,.18);border-color:rgba(240,86,46,.55);color:var(--text)}
+  .cmp-pickers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+  @media (min-width:720px){.cmp-pickers.cmp-4{grid-template-columns:1fr 1fr 1fr 1fr}}
+  .modal .version .version-credit{color:var(--faint);font-weight:400}
+  .county-list{padding:4px 12px 14px;max-height:min(42vh,400px);overflow-y:auto}
+  .county-list button{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:8px 10px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+  .county-list button:last-child{border-bottom:0}
+  .county-list button:hover,.county-list button:focus-visible{background:rgba(240,86,46,.12)}
+  .county-list .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .county-list .cn{flex:1;font-size:13px}
+  .county-list .cr{color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;font-size:12.5px}
+  .county-list .cp{color:var(--faint);font-size:11px;margin-left:6px}
+
+  .modal-bg{position:absolute;inset:0;z-index:20;background:rgba(4,7,10,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-bg.open{display:flex}
+  .modal{max-width:560px;width:100%;max-height:86vh;overflow-y:auto;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:30px 30px 26px}
+  .modal h1{margin:0 0 4px;font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .modal .tag{color:var(--accent);font-weight:700;font-size:13px;letter-spacing:.02em;margin-bottom:16px}
+  .modal p{color:#cbd5df;font-size:14px;line-height:1.65;margin:11px 0}
+  .modal p b{color:#fff}
+  .modal .kstat{display:flex;gap:22px;margin:18px 0;flex-wrap:wrap}
+  .modal .kstat .n{font-size:24px;font-weight:800;color:var(--accent)}
+  .modal .kstat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .modal .cta{margin-top:18px;background:var(--accent);border:0;color:#fff;font-weight:700;font-size:15px;padding:12px 22px;border-radius:11px;cursor:pointer;width:100%}
+  .modal .cta:hover{filter:brightness(1.08)}
+  .modal .src{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--faint);line-height:1.6}
+  .modal .src a{color:var(--muted)}
+  .modal .version{margin-top:12px;font-size:10.5px;color:var(--faint)}
+  .modal h3{margin:18px 0 5px;font-size:14px;font-weight:700}
+  .modal ul{margin:9px 0;padding-left:18px;color:#cbd5df;font-size:13.5px;line-height:1.6}
+  .modal ul li{margin:5px 0}
+  .modal ul li b{color:#fff}
+  .modal .formula{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:12.5px;color:#cbd5df;margin:11px 0;line-height:1.7}
+  .modal .formula b{color:#fff}
+  .table-modal{max-width:980px}
+  .table-tools{display:flex;gap:10px;align-items:center;margin:14px 0 12px}
+  .table-tools input{width:100%;min-height:44px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);padding:10px 12px;font-size:14px}
+  .table-wrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{position:sticky;top:0;background:#151c24;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;z-index:1}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .region-row{width:100%;min-height:40px;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column;justify-content:center}
+  .region-row:hover{text-decoration:underline}
+  .cmp-side{position:relative}
+  .cmp-side input{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-size:14px}
+  .cmp-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:9px;max-height:300px;overflow-y:auto;display:none;box-shadow:var(--shadow)}
+  .cmp-list.open{display:block}
+  .cmp-list button{display:block;width:100%;text-align:left;padding:9px 11px;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--text);font-size:13px;cursor:pointer}
+  .cmp-list button:last-child{border-bottom:0}
+  .cmp-list button:hover{background:rgba(240,86,46,.14)}
+  .cmp-match-count{padding:7px 11px;font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line);pointer-events:none;user-select:none}
+  .table-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:stretch}
+  .table-actions .cta{flex:1;margin-top:0;min-width:140px}
+  .table-actions .cta.secondary{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);font-weight:700}
+  .table-actions .cta.secondary:hover{filter:none;background:rgba(255,255,255,.12)}
+  .table-actions .cta[hidden]{display:none!important}
+  .table-actions .cta:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .feedback-chip{position:absolute;z-index:5;bottom:24px;right:54px;display:inline-flex;align-items:center;gap:7px;
+    min-height:36px;padding:6px 12px 6px 10px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(18,24,31,.82);color:var(--muted);font-size:12.5px;font-weight:650;cursor:pointer;
+    backdrop-filter:blur(8px);box-shadow:var(--shadow);pointer-events:auto;transition:.15s}
+  .feedback-chip:hover{background:rgba(255,255,255,.1);color:var(--text);border-color:#3a4654}
+  .feedback-chip svg{width:15px;height:15px;flex:none;opacity:.9}
+  .feedback-sheet{max-width:440px}
+  .feedback-lead{margin:0 0 14px!important;font-size:13px!important;color:var(--muted)!important}
+  .fb-field{display:block;margin:0 0 12px;font-size:12px;font-weight:650;color:var(--muted)}
+  .fb-field .opt{font-weight:500;color:var(--faint)}
+  .fb-field input,.fb-field textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:14px;font-weight:500;resize:vertical}
+  .fb-field textarea{min-height:110px;line-height:1.45}
+  .fb-toast{position:fixed;z-index:40;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;
+    max-width:min(420px,calc(100vw - 32px));padding:10px 14px;border-radius:10px;border:1px solid var(--line);
+    background:rgba(18,24,31,.96);color:var(--text);font-size:13px;font-weight:650;box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);transition:opacity .2s,transform .2s}
+  .fb-toast.open{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media print{
+    @page{size:letter;margin:.55in}
+    html,body{height:auto;overflow:visible;background:#fff;color:#111}
+    body{font-size:11pt}
+    #map,header,.search,.filters,.filter-toast,.legend,.mobile-tools,.modal-bg,.basemap-notice,.skip-link,.maplibregl-control-container,.maplibregl-ctrl,.feedback-chip,.fb-toast{display:none!important}
+    .panel{position:static!important;transform:none!important;width:100%!important;max-width:none!important;height:auto!important;overflow:visible!important;
+      background:#fff!important;color:#111!important;border:0!important;box-shadow:none!important;padding:0!important}
+    .panel:not(.open) #panel-body::before{content:"Open a region panel before printing.";display:block;color:#444;font-weight:700}
+    .panel .close,.panel-actions,.copylink{display:none!important}
+    .p-nav,.p-hero,.narrative,.section-t,.grid,.cmp,.cmp-note,.p-foot{padding-left:0!important;padding-right:0!important}
+    .p-hero{padding-top:0!important;border-bottom:1px solid #bbb!important}
+    .p-hero h2{font-size:22pt!important;color:#111!important;margin-top:10px!important}
+    .loc,.lbl,.r-sub,.cmp-note,.p-foot,.stat .k{color:#444!important}
+    .narrative{color:#111!important;border-bottom:1px solid #ddd!important}
+    .narrative b,.p-foot b{color:#111!important}
+    .grid{grid-template-columns:1fr 1fr!important;gap:8px!important;break-inside:avoid}
+    .stat{background:#fff!important;border:1px solid #ccc!important;border-radius:6px!important;padding:9px 10px!important;break-inside:avoid}
+    .stat .v{color:#111!important;font-size:15pt!important}
+    .tier-chip{color:#111!important;border:1px solid #999!important;background:#fff!important}
+    .setting-badge{color:#444!important;border-color:#bbb!important}
+    .track{background:#e6e6e6!important;border:1px solid #ddd!important}
+    .fill{filter:grayscale(1)!important;background:#333!important}
+    .natmark,.natmark::after{background:#111!important}
+    .section-t{color:#333!important;margin-top:6px!important}
+    .worst{padding:2px 22px 6px}
+  .worst-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .worst-row:last-child{border-bottom:0}
+  .worst-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .worst-n{flex:1;color:var(--text)}
+  .worst-s{color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+  .p-foot{border-top:1px solid #bbb!important;font-size:9.5pt!important}
+  }
+  @media (max-width:1040px){ .tagline{display:none} }
+  @media (max-width:860px){ header .hstat{display:none} }
+  @media (max-width:720px){
+    header{gap:8px;padding:10px 12px}
+    .wordmark{font-size:19px}
+    header .brand{flex:1;min-width:0}
+    header .spacer{display:none}
+    header > #method-btn,header > #about-btn,header > #table-btn,header > #us-csv-btn{display:none}
+    header .hstat{display:none}
+    .btn-ghost{min-height:44px;padding:9px 11px}
+    .search{top:68px;left:12px;right:12px;width:auto;max-width:none}
+    .search input{padding:11px 13px;font-size:16px}
+    .mobile-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;left:0;right:0;top:auto;bottom:0;position:fixed;z-index:9;
+      background:rgba(14,20,27,.97);border-top:1px solid var(--line);backdrop-filter:blur(10px);
+      padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+    .mobile-tools .btn-ghost{display:flex;align-items:center;justify-content:center;text-align:center;
+      background:transparent;box-shadow:none;border:0;border-radius:9px;font-size:10px;font-weight:600;
+      min-height:46px;min-width:0;padding:4px 2px;white-space:normal;line-height:1.15;overflow:hidden}
+    .mobile-tools .btn-ghost:active{background:rgba(240,86,46,.18)}
+    .filters{display:none}
+    .filters.open{display:block;position:fixed;z-index:11;top:auto;left:0;right:0;width:auto;max-width:none;
+      bottom:calc(60px + env(safe-area-inset-bottom));max-height:62vh;overflow-y:auto;
+      border-radius:16px 16px 0 0;padding:14px 16px 18px}
+    .filters .sheet-close{display:flex;position:absolute;top:10px;right:10px;width:38px;height:38px;align-items:center;justify-content:center;
+      border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.06);color:var(--text);font-size:18px;cursor:pointer}
+    .chip,.seg button,.region-row{min-height:44px}
+    #map{bottom:calc(124px + env(safe-area-inset-bottom))}
+    .legend{position:fixed;left:0;right:0;width:auto;bottom:calc(60px + env(safe-area-inset-bottom));
+      border-radius:0;border-left:0;border-right:0;margin:0;padding:8px 14px;background:rgba(14,20,27,.97);z-index:8}
+    .legend h4{margin:0 0 6px;font-size:10px}
+    .legend .note{display:none}
+    .maplibregl-ctrl-bottom-right{bottom:10px}
+    .maplibregl-ctrl-bottom-left{bottom:10px}
+    .maplibregl-ctrl-group{display:none}
+    .feedback-chip{bottom:calc(72px + env(safe-area-inset-bottom));right:12px}
+    .basemap-notice{left:12px;right:12px;width:auto;bottom:calc(150px + env(safe-area-inset-bottom))}
+    .filter-toast{left:12px;right:12px;top:auto;width:auto;max-width:none;bottom:calc(150px + env(safe-area-inset-bottom))}
+    .panel{overscroll-behavior:contain;visibility:hidden;transition:transform .32s cubic-bezier(.4,0,.2,1),visibility 0s .35s}
+    .panel.open{visibility:visible;transition:transform .32s cubic-bezier(.4,0,.2,1)}
+    .panel::before{content:"";display:block;position:sticky;top:6px;z-index:11;width:44px;height:4px;margin:0 auto 2px;border-radius:3px;background:rgba(255,255,255,.28)}
+    .panel{width:100%;top:auto;bottom:0;height:auto;max-height:50vh;max-height:50dvh;border-left:0;border-top:1px solid var(--line);transform:translateY(100%);border-radius:18px 18px 0 0;z-index:12;
+      padding-bottom:env(safe-area-inset-bottom)}
+    .panel.open{transform:translateY(0)}
+    body.panel-open .legend,body.panel-open .filters{display:none}
+    .modal{padding:24px 20px;max-height:86vh}
+    /* Splash: pin Enter CTA; body scrolls above it */
+    #modal.modal-bg{overflow:hidden;overscroll-behavior:none;align-items:center;justify-content:center}
+    #modal .modal{display:flex;flex-direction:column;max-height:92vh;max-height:min(92dvh,92vh);overflow:hidden;padding:20px 18px 14px}
+    #modal .modal .splash-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    #modal .modal .splash-footer{flex:0 0 auto;padding-top:12px;margin-top:4px;border-top:1px solid var(--line)}
+    #modal .modal .splash-footer .cta{margin-top:0}
+    #modal .modal .splash-footer .splash-hint{font-size:12px;line-height:1.45;margin:10px 0 0;color:#cbd5df}
+    #modal .modal .splash-footer .version{margin-top:8px}
+    #modal .modal h1{font-size:clamp(22px,5.8vw,28px);line-height:1.15;margin:0 0 10px}
+    #modal .modal p{font-size:13px;line-height:1.55;margin:8px 0}
+    #modal .modal .kstat{margin:12px 0;gap:14px}
+    #modal .modal .kstat .n{font-size:20px}
+    #modal .modal .src{margin-top:12px;padding-top:12px}
+    .table-wrap{max-height:46vh}
+    .cmp-pickers{grid-template-columns:1fr}
+    th,td{padding:9px 10px}
+  }
+  body.panel-open .search,body.panel-open .mobile-tools{display:none}
+  @media (prefers-reduced-motion: reduce){ .panel{transition:none} .btn-ghost,.chip,.copylink{transition:none} }
+
+  /* —— polish (standalone US) —— */
+  .map-vignette{position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 45%,rgba(8,11,15,.55) 100%);}
+  #modal.modal-bg{background:rgba(4,7,10,.82);backdrop-filter:blur(10px);overflow:hidden;overscroll-behavior:none}
+  #modal .modal{max-width:620px;border:1px solid rgba(240,86,46,.35);
+    box-shadow:0 24px 80px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04) inset;
+    animation:splashIn .55s cubic-bezier(.2,.8,.2,1) both;
+    display:flex;flex-direction:column;max-height:92vh;max-height:min(92dvh,92vh);overflow:hidden}
+  #modal .modal .splash-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #modal .modal .splash-footer{flex:0 0 auto}
+  #modal .modal .splash-footer .splash-hint{font-size:12.5px;line-height:1.5;margin:10px 0 0;color:#cbd5df}
+  @keyframes splashIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){#modal .modal{animation:none}}
+  #modal .modal h1{font-size:clamp(26px,3.4vw,34px);line-height:1.12;
+    font-family:Georgia,"Times New Roman",serif;letter-spacing:-.03em;margin:0 0 14px}
+  #modal .modal .tag{letter-spacing:.12em;font-size:11px}
+  #modal .modal .cta{font-size:15px;letter-spacing:.01em}
+  header{padding:12px 18px}
+  .wordmark{font-size:20px}
+  .legend .note b{color:#fff}
+
+  /* map name tip: desktop hover + mobile finger-follow */
+  #map-tip{
+    position:fixed;z-index:15;display:none;pointer-events:none;
+    max-width:min(280px,70vw);padding:6px 10px;border-radius:8px;
+    border:1px solid var(--line);background:rgba(18,24,31,.96);color:var(--text);
+    font:650 12.5px/1.35 var(--sans);letter-spacing:.01em;
+    box-shadow:var(--shadow);white-space:nowrap;backdrop-filter:blur(8px);
+    transform:translate(12px,14px);
+  }
+  #map-tip.open{display:block}
+  #map-tip.above{transform:translate(-50%,calc(-100% - 18px))}
+</style>
+</head>
+<body>
+<noscript>
+  <div class="noscript">
+    <div>
+      <h1>The Food Gap needs JavaScript</h1>
+      <p>The interactive map, regional panels, search, filters, and data table are rendered in the browser.</p>
+      <p>Please enable JavaScript to use the site. The briefing, privacy, licence, and launch documents remain available in this release package.</p>
+      
+    </div>
+  </div>
+</noscript>
+<a class="skip-link" href="#data-table-modal" id="skip-data">Skip to comparison</a>
+<div id="map" role="img" aria-label="Interactive choropleth map of U.S. counties with food deserts by severity index"></div>
+<div id="map-tip" role="tooltip" aria-hidden="true"></div>
+<div class="map-vignette" aria-hidden="true"></div>
+<div id="status" class="sr-only" aria-live="polite"></div>
+<div class="basemap-notice" id="basemap-notice" role="status" aria-live="polite">Basemap unavailable. Data layer still works.</div>
+<header>
+  <div class="brand">
+    <span class="wordmark">The Food Gap<span class="dot">.</span></span>
+    <span class="tagline" id="tagline">Mapping food-desert severity across the United States</span>
+  </div>
+  
+  <div class="spacer"></div>
+  <div class="hstat">
+    <div><div class="n" id="stat-areas">—</div><div class="l" id="stat-areas-label">counties</div></div>
+    <div><div class="n" id="stat-people">—</div><div class="l" id="stat-people-label">people with low food access</div></div>
+  </div>
+  <button class="btn-ghost" id="method-btn">Methodology</button>
+  <button class="btn-ghost" id="about-btn">About &amp; Data</button>
+  <button class="btn-ghost" id="table-btn">Compare states or counties</button>
+  <button class="btn-ghost" id="us-csv-btn">Download US CSV</button>
+</header>
+<div class="search">
+  <input id="search" type="text" placeholder="Search any county or state…" autocomplete="off" aria-label="Search any county or state" aria-controls="results" aria-expanded="false" />
+  <div class="results" id="results" role="listbox"></div>
+</div>
+<div class="mobile-tools" aria-label="Map tools">
+  <button class="btn-ghost" id="mobile-filter-btn" aria-expanded="false" aria-controls="filters">Filters</button>
+  <button class="btn-ghost" id="mobile-table-btn">Compare states or counties</button>
+  <button class="btn-ghost" id="mobile-method-btn">Methodology</button>
+  <button class="btn-ghost" id="mobile-about-btn">About &amp; Data</button>
+  <button class="btn-ghost" id="mobile-us-csv-btn">Download US CSV</button>
+</div>
+<div class="filters" id="filters">
+  <button class="sheet-close" id="filters-close" aria-label="Close">&times;</button>
+  <h4 id="filter-title">Food-desert severity</h4>
+  <div class="chips" id="tier-chips">
+    <button class="chip" data-tier="critical"><span class="sw" style="background:var(--critical)"></span>Very high</button>
+    <button class="chip" data-tier="severe"><span class="sw" style="background:var(--severe)"></span>High</button>
+    <button class="chip" data-tier="moderate"><span class="sw" style="background:var(--moderate)"></span>Moderate</button>
+    <button class="chip" data-tier="minor"><span class="sw" style="background:var(--minor)"></span>Low</button>
+  </div>
+  <div class="seg" id="setting-seg">
+    <button data-setting="all" class="active">All</button>
+    <button data-setting="urban">Urban</button>
+    <button data-setting="rural">Rural</button>
+  </div>
+  <h4 class="mt" id="threshold-title">Threshold</h4>
+  <p class="th-help" id="threshold-help">When enabled, the map only shows counties whose custom severity index is at least the slider value (0–100). Severity is this Atlas-based index, not a USDA LILA %.</p>
+  <label class="th-row"><input type="checkbox" id="th-rate-on" /><span><span id="threshold-label">Severity ≥</span> <b id="th-rate-val">50</b></span></label>
+  <input type="range" id="th-rate" min="0" max="100" step="5" value="50" disabled />
+</div>
+<div class="filter-toast" id="filter-toast" role="status" aria-live="polite">
+  <span id="filter-toast-text">0 regions match</span>
+  <button type="button" id="filter-reset">Reset filters</button>
+  <button type="button" class="toast-close" id="filter-toast-close" aria-label="Dismiss">&times;</button>
+</div>
+<div class="legend">
+  <h4 id="legend-title">Food-desert severity (USDA 2019)</h4>
+  <div class="ramp">
+    <span style="background:var(--minor)"></span><span style="background:var(--moderate)"></span>
+    <span style="background:var(--severe)"></span><span style="background:var(--critical)"></span>
+  </div>
+  <div class="ramp-labels"><span id="legend-lo">Low</span><span id="legend-hi">Very high</span></div>
+  <div class="note" id="legend-note"><b>2,083 counties</b> that contain food-desert tracts are shaded by a <b>custom severity index</b>
+    (0–100) derived from USDA Food Access Research Atlas 2019 tract indicators — <b>not</b> a published USDA county LILA %. Click a county for detail.</div>
+</div>
+<div class="panel" id="panel">
+  <button class="close" id="panel-close" aria-label="Close">&times;</button>
+  <div id="panel-body"></div>
+</div>
+<div class="modal-bg open" id="modal">
+  <div class="modal">
+    <div class="splash-scroll">
+    <div class="tag">THE FOOD GAP · UNITED STATES</div>
+    <h1>Which American communities face the greatest risk of food insecurity?</h1>
+    <p>When a household's income falls too low, reliable access to enough healthy food is often the first thing to go. Low income is the strongest predictor of household food insecurity in the United States.</p>
+    <p>This map shows <b>2,083 U.S. counties that contain food-desert tracts</b> — not every U.S. county — shaded by a <b>custom severity index</b> from USDA Food Access Research Atlas (2019) tract data.</p>
+    <div class="kstat">
+      <div><div class="n" id="m-areas">—</div><div class="l">counties with deserts</div></div>
+      <div><div class="n" id="m-people">—</div><div class="l">people with low food access</div></div>
+      <div><div class="n" id="m-provs">—</div><div class="l">states + DC</div></div>
+    </div>
+    <div class="src">
+      Data: <a href="https://www.ers.usda.gov/data-products/food-access-research-atlas/" target="_blank" rel="noopener">USDA ERS Food Access Research Atlas (2019)</a>,
+      CDC USALEEP, U.S. Census population estimates, USDA Food Environment Atlas (stores),
+      and <a href="https://www.bls.gov/cex/" target="_blank" rel="noopener">BLS Consumer Expenditure Survey</a>
+      (national food-at-home baseline used to <b>model</b> county weekly grocery estimates).
+      Basemap © OpenFreeMap · OpenStreetMap contributors.
+      Built from U.S. federal public-domain sources; not an official USDA, CDC, Census, or BLS product.
+      Privacy: static site, no accounts, no forms, no cookies, no analytics. See <a href="PRIVACY.md" target="_blank" rel="noopener">Privacy note</a>.
+    </div>
+    </div>
+    <div class="splash-footer">
+    <button class="cta" id="enter-btn">Enter the national map</button>
+    <p class="splash-hint">Click a state for statewide stats, then dig into counties for desert tracts, people with low food access, stores, and modelled grocery context. Severity is <b>not</b> a published USDA county LILA percentage.</p>
+    <div class="version">Version <span id="app-version">—</span><span class="version-credit"> · Chris Householder</span></div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="method">
+  <div class="modal">
+    <div class="tag">METHODOLOGY</div>
+    <h1>How this map measures food-desert severity</h1>
+    <h3>What is shown</h3>
+    <p>This map covers <b>2,083 U.S. counties</b> (50 states + DC) where the USDA Food Access Research Atlas flags low-income / low-access (“food desert”) census tracts. Counties with no desert tracts in the source file are not drawn. Shading uses a <b>custom severity index (0–100)</b> built from Atlas tract indicators — <b>not</b> a single published USDA county LILA percentage.</p>
+    <h3>People and stores</h3>
+    <p>County population and store counts come from Census and Food Environment Atlas fields packaged with the map. “People affected” aggregates desert-related population fields from the pipeline; treat totals as approximations.</p>
+    <h3>Severity levels</h3>
+    <div class="formula"><b>Minor → Critical</b> bands follow the index cutoffs in the packaged data (roughly minor 7–38 · moderate 39–48 · severe 48–59 · critical 59–94). The numeric score is always shown in the detail panel.</div>
+    <h3>Urban / rural</h3>
+    <p>Urban vs rural is a derived density flag from the source package, not a Census Urban Area designation.</p>
+    <h3>Grocery spending</h3>
+    <p><b>All dollar amounts are U.S. dollars (USD).</b> Weekly grocery figures are <b>modelled estimates</b> from BLS Consumer Expenditure Survey national food-at-home spending, scaled by county income — not local receipts. The fruits-&amp;-vegetables share is a <b>national constant</b> in this edition.</p>
+    <h3>Limitations</h3>
+    <ul>
+      <li>Severity is a custom Atlas-based index, not an official USDA county LILA rate.</li>
+      <li>Not every U.S. county appears — only counties with desert tracts in the packaged data (e.g. NYC borough counties are absent).</li>
+      <li>Weekly grocery and produce share are modelled / national, not store-level prices.</li>
+      <li>County geometry is generalized for the web.</li>
+      <li>This is an independent visualization, not an official USDA, CDC, Census, or BLS product.</li>
+    </ul>
+    <button class="cta" id="method-close">Got it</button>
+  </div>
+</div>
+<div class="modal-bg" id="data-table-modal">
+  <div class="modal table-modal" role="dialog" aria-modal="true" aria-labelledby="data-table-title">
+    <div class="tag" id="data-table-tag">COMPARE</div>
+    <h1 id="data-table-title">Compare states or counties</h1>
+    <div class="cmp-mode" id="cmp-mode" role="group" aria-label="Compare mode">
+      <button type="button" class="active" data-cmp-mode="counties" id="cmp-mode-counties">Counties</button>
+      <button type="button" data-cmp-mode="states" id="cmp-mode-states">States</button>
+    </div>
+    <div class="cmp-pickers cmp-4" id="cmp-pickers">
+      <div class="cmp-side"><input id="cmp-a" type="text" autocomplete="off" placeholder="County A…" aria-label="Choose county A" /><div class="cmp-list" id="cmp-a-list"></div></div>
+      <div class="cmp-side"><input id="cmp-b" type="text" autocomplete="off" placeholder="County B…" aria-label="Choose county B" /><div class="cmp-list" id="cmp-b-list"></div></div>
+      <div class="cmp-side"><input id="cmp-c" type="text" autocomplete="off" placeholder="County C…" aria-label="Choose county C" /><div class="cmp-list" id="cmp-c-list"></div></div>
+      <div class="cmp-side"><input id="cmp-d" type="text" autocomplete="off" placeholder="County D…" aria-label="Choose county D" /><div class="cmp-list" id="cmp-d-list"></div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr id="cmp-thead-row"><th scope="col">Metric</th><th scope="col" id="cmp-h-a">A</th><th scope="col" id="cmp-h-b">B</th></tr></thead>
+      <tbody id="data-table-body"><tr><td colspan="3">Select up to 4 counties or states above to compare them side by side.</td></tr></tbody></table></div>
+    <div class="table-actions">
+      <button type="button" class="cta secondary" id="cmp-csv-btn" hidden disabled>Download CSV</button>
+      <button class="cta" id="data-table-close">Close</button>
+    </div>
+  </div>
+</div>
+<button type="button" class="feedback-chip" id="feedback-btn" aria-haspopup="dialog" aria-controls="feedback-modal" title="Send feedback">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+  <span>Feedback</span>
+</button>
+<div class="modal-bg" id="feedback-modal">
+  <div class="modal feedback-sheet" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+    <div class="tag">FEEDBACK</div>
+    <h1 id="feedback-title">Send feedback</h1>
+    <p class="feedback-lead">Opens your email app with a draft to <b>foodgap-feedback@agentmail.to</b>. Nothing is uploaded from this page.</p>
+    <label class="fb-field">Name <span class="opt">(optional)</span>
+      <input type="text" id="fb-name" name="name" autocomplete="name" maxlength="120" />
+    </label>
+    <label class="fb-field">Reply-to email <span class="opt">(optional)</span>
+      <input type="email" id="fb-email" name="email" autocomplete="email" maxlength="160" />
+    </label>
+    <label class="fb-field">Comment
+      <textarea id="fb-msg" name="comment" required rows="5" maxlength="4000" placeholder="What should we know?"></textarea>
+    </label>
+    <div class="table-actions">
+      <button type="button" class="cta secondary" id="fb-cancel">Cancel</button>
+      <button type="button" class="cta" id="fb-send">Send</button>
+    </div>
+  </div>
+</div>
+<div class="fb-toast" id="fb-toast" role="status" aria-live="polite"></div>
+<script src="data.js?v=5" defer></script>
+<script src="maplibre-gl.js" defer></script>
+<script>
+window.addEventListener("DOMContentLoaded",function(){
+(function(){
+  if(!window.US_DATA || !window.maplibregl){
+    document.body.innerHTML='<div style="max-width:460px;margin:18vh auto;padding:0 20px;font-family:sans-serif;color:#e7edf3;text-align:center">'+
+      '<h1 style="font-size:22px">The Food Gap</h1><p style="color:#9aa7b4;line-height:1.6">The map could not load '+
+      (!window.US_DATA?'its data file (data.js)':'the map library')+'. Please check your connection and refresh the page.</p></div>';
+    return;
+  }
+  try{
+    if("scrollRestoration" in history) history.scrollRestoration="manual";
+    window.scrollTo(0,0);
+    window.addEventListener("load",function(){window.scrollTo(0,0);});
+  }catch(e){}
+  var APP_VERSION="2.4";
+  var US=window.US_DATA, USNAT=window.US_NATIONAL, USPEND=window.US_SPEND||{weekly:119,produce_pct:12.0}, USMED=window.US_MEDINC||78900, USX=window.USA_EXTRA||{}, USLET=window.US_LETTUCE||3.28;
+  var esc=function(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");};
+  var deacc=function(s){try{return s.normalize("NFD").replace(/[̀-ͯ]/g,"");}catch(e){return s;}};
+  var normQ=function(s){return deacc(String(s==null?"":s).trim().toLowerCase()).replace(/,/g," ").replace(/\s+/g," ").trim();};
+  var MOTION=window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var dur=function(ms){return MOTION?0:ms;};
+  var TIER_COLORS={critical:"#e64545",severe:"#f0562e",moderate:"#fb9a3c",minor:"#fdcc5c"};
+  var COPY={
+    en:{
+      title:"The Food Gap — Food-Desert Severity Across the United States",
+      description:"An interactive map of 2,083 U.S. counties with food deserts, shaded by severity using USDA Food Access Research Atlas and related public data.",
+      tagline:"Mapping food-desert severity across the United States",
+      censusDivisions:"counties with deserts", peopleLow:"people with low food access", method:"Methodology", about:"About & Data",
+      search:"Search any county or state…",
+      table:"Compare states or counties", mobileFilters:"Filters", mobileTools:"Map tools", skipData:"Skip to comparison",
+      mapLabel:"Interactive choropleth map of U.S. counties with food deserts by severity index",
+      statusTableOpen:"Comparison opened", statusFiltersOpen:"Filters opened", statusFiltersClosed:"Filters closed", statusRegionOpen:"Region opened",
+      searchNoResults:"No matching community or region", filterNoResults:"0 regions match", resetFilters:"Reset filters", dismiss:"Dismiss", storyPrefix:"Demo stop",
+      basemapNotice:"Basemap unavailable. Data layer still works.",
+      filterTitle:"Food-desert severity", threshold:"Severity ≥", legendTitle:"Food-desert severity (USDA 2019)",
+      legendLow:"Low", legendHigh:"Very high",
+      legendNote:"<b>2,083 counties</b> that contain food-desert tracts are shaded by a <b>custom severity index</b> (0–100) from USDA Atlas 2019 tract indicators — <b>not</b> a published USDA county LILA %. Click a <b>state</b> for statewide stats, then counties.",
+      tiers:{critical:"Very high",severe:"High",moderate:"Moderate",minor:"Low"},
+      settings:{all:"All",urban:"Urban",rural:"Rural"},
+      badge:{urban:"urban",rural:"rural"},
+      tierChip:"food-desert severity", ranked:"Ranked against all 2,083 U.S. counties containing food deserts",
+      lowIncomeLabel:"severity index (0–100, custom)", censusDivision:"county", copyLink:"Copy link", copyData:"Copy data", copied:"Copied", downloadUsCsv:"Download US CSV", downloadStateCsv:"Download CSV", downloadCountyCsv:"Download CSV",
+      above:"above", below:"below", intro:"In", aboutRate:"about", residents:"severity index versus the national packaged reference", nationalRate:"the national rate of",
+      predictor:"Low access plus low income is the Atlas framing of food-desert risk.",
+      spendBoth:"Modelled weekly grocery spend is about <b>{money}</b> ({scope}), with about <b>{produce}</b> of grocery spending on fruits & vegetables ({pscope} — national constant).",
+      spendHigh:" That is among the highest grocery bills in the United States.",
+      spendOnly:"Modelled weekly grocery spend is about <b>{money}</b> ({scope}).",
+      numbers:"The numbers", rateStat:"Severity index (0–100)", peopleApprox:"People with low food access", population:"Population",
+      medianIncome:"Median family income (US$, Atlas pipeline)", grocerySpend:"Modelled weekly grocery spend (US$, {scope})",
+      groceryMissing:"Weekly grocery spend — not surveyed", produceShare:"Of groceries spent on fruits & vegetables ({scope})",
+      produceMissing:"Fruits & vegetables share — not available", lettuceHead:"Head of iceberg lettuce ({scope}) — national avg {money}",
+      lettuceTest:"The lettuce test", lettuceSentence:"A head of iceberg lettuce runs about <b>{money}</b> here ({scope}) — <b style=\"color:{color}\">{label}</b> against the {national} national average. {note}",
+      lettuceLabels:{cheap:"cheaper than most of the U.S.",expensive:"expensive",middle:"middle of the road"},
+      compared:"Compared to the United States", whiteLine:"White line marks the U.S. national figure",
+      cmpRate:"Severity index", cmpIncome:"Median household income", cmpSpend:"Weekly grocery spend", cmpProduce:"Share on fruits & vegetables", cmpLettuce:"Head of lettuce",
+      panelFoot:"<b>Custom severity index.</b> Derived from USDA Food Access Research Atlas 2019 tract indicators for counties that contain food deserts — not a published USDA county LILA %. Grocery weekly figures are <b>modelled</b> from BLS CE national food-at-home spending; produce share is a national constant. Stores: USDA Food Environment Atlas. Population: Census estimates. Life expectancy: CDC USALEEP where available. All figures in US$.",
+      tableTag:"COMPARE", tableTitle:"Compare states or counties", tableSearch:"Filter regions…",
+      tableSearchAria:"Filter data table by county or state", tableRegion:"Region", tableProvince:"State",
+      tableRate:"Severity", tablePeople:"People", tableSetting:"Setting", tableClose:"Close table",
+      tableOpenRegion:"Open region", tableNoResults:"No matching regions", close:"Close",
+      searchRegion:"severity", shareNationally:"share nationally", cityTown:"City/town", inWord:"in", noData:"n/a"
+    }
+  };
+  var num=function(n){return (n===null||n===undefined||isNaN(n));};
+  var params0=new URLSearchParams(location.search);
+  var forceBasemapOff=params0.get("basemap")==="off";
+  var lang="en";
+  var locale=function(){return "en-US";};
+  var tr=function(k){var c=COPY.en; return (c&&c[k]!=null)?c[k]:k;};
+  var fmt=function(n){return num(n)?"—":Number(n).toLocaleString(locale());};
+  var pct=function(n){return num(n)?tr("noData"):n+"%";};
+  var money=function(n){return num(n)?tr("noData"):"US $"+fmt(n);};
+  var money2=function(n){return num(n)?tr("noData"):"US $"+Number(n).toFixed(2);};
+  var setTxt=function(id,v){var el=document.getElementById(id); if(el) el.textContent=v;};
+  var setHtml=function(id,v){var el=document.getElementById(id); if(el) el.innerHTML=v;};
+  var text=function(template,repl){return template.replace(/\{(\w+)\}/g,function(_,k){return repl[k]||"";});};
+  function tierInfo(key){return {label:COPY.en.tiers[key]||key,color:TIER_COLORS[key]||TIER_COLORS.moderate};}
+  function nameOf(p){return p.name;}
+  function officialOf(p){return p.official;}
+  function provinceOf(p){return p.province;}
+  function scopeOf(p,key){return p[key];}
+  function noteOf(p){return p.lettuce_note;}
+  function langUrl(region,stateName){
+    var p=new URLSearchParams();
+    if(region) p.set("region",region);
+    else if(stateName) p.set("state",stateName);
+    var q=p.toString();
+    return location.pathname+(q?"?"+q:"");
+  }
+
+  function aboutHtml(){
+    return '<div class="splash-scroll">'+
+      '<div class="tag">THE FOOD GAP · UNITED STATES</div>'+
+      '<h1 id="about-title">Which American communities face the greatest risk of food insecurity?</h1>'+
+      '<p>When a household\'s income falls too low, reliable access to enough healthy food is often the first thing to go. Low income is the strongest predictor of household food insecurity in the United States.</p>'+
+      '<p>This map shows <b>2,083 U.S. counties that contain food-desert tracts</b> — not every U.S. county — shaded by a <b>custom severity index</b> from USDA Food Access Research Atlas (2019) tract data.</p>'+
+      '<div class="kstat"><div><div class="n" id="m-areas">—</div><div class="l">counties with deserts</div></div><div><div class="n" id="m-people">—</div><div class="l">people with low food access</div></div><div><div class="n" id="m-provs">—</div><div class="l">states + DC</div></div></div>'+
+      '<div class="src">Data: <a href="https://www.ers.usda.gov/data-products/food-access-research-atlas/" target="_blank" rel="noopener">USDA ERS Food Access Research Atlas (2019)</a>, CDC USALEEP, U.S. Census, USDA Food Environment Atlas, and <a href="https://www.bls.gov/cex/" target="_blank" rel="noopener">BLS Consumer Expenditure Survey</a> (national food-at-home baseline used to model weekly grocery estimates). Basemap © OpenFreeMap · OpenStreetMap contributors. Built from U.S. federal public-domain sources; not an official USDA, CDC, Census, or BLS product. Privacy: static site, no accounts, no forms, no cookies, no analytics. See <a href="PRIVACY.md" target="_blank" rel="noopener">Privacy note</a>.</div>'+
+      '</div><div class="splash-footer">'+
+      '<button class="cta" id="enter-btn">Enter the national map</button>'+
+      '<p class="splash-hint">Click a state for statewide stats, then dig into counties for desert tracts, people with low food access, stores, and modelled grocery context. Severity is <b>not</b> a published USDA county LILA percentage.</p>'+
+      '<div class="version">Version <span id="app-version">—</span><span class="version-credit"> · Chris Householder</span></div></div>';
+  }
+
+  function methodHtml(){
+    return '<div class="tag">METHODOLOGY</div>'+
+      '<h1 id="method-title">How this map is built</h1>'+
+      '<h3>What is shown</h3><p>This map covers <b>2,083 U.S. counties that contain food-desert tracts</b> (50 states + DC) — not all ~3,100 U.S. counties. Shading is a <b>custom severity index (0–100)</b> derived from USDA Food Access Research Atlas <b>2019</b> tract indicators. <b>It is not a published USDA county LILA percentage</b> and is not food-insecurity prevalence. National mean severity across these counties is about <b>'+pct(USNAT)+'</b>.</p>'+
+      '<h3>Severity tiers</h3><div class="formula"><b>Low → Very high</b> tiers (minor / moderate / severe / critical) follow observed index bands in this dataset. The numeric score is always shown on the county panel.</div>'+
+      '<h3>Related indicators</h3><p>Panels show desert-tract counts, people with low food access (pipeline sums), Census population (mostly 2023), grocery stores from the USDA Food Environment Atlas (mostly 2020), and Atlas-linked poverty / SNAP / vehicle / low-access fields plus CDC USALEEP life expectancy where available. Some income or poverty fields may be desert-tract-scoped — treat as pipeline context, not always countywide ACS/SAIPE.</p>'+
+      '<h3>Urban / rural</h3><p>Counties are labeled <b>urban</b> or <b>rural</b> with a derived setting flag for map filters — not Census urbanized-area geography.</p>'+
+      '<h3>Grocery spending (modelled)</h3><p><b>All dollar amounts are U.S. dollars (US$).</b> Weekly grocery spend is a <b>modelled estimate</b>, not a county survey bill. From BLS CE national food-at-home (~US$119/week), counties are income-scaled:</p>'+
+      '<div class="formula">county weekly ≈ national weekly × (county median income ÷ US$78,900)<sup>0.35</sup><br>Elasticity <b>0.35</b> is assumed — not a BLS county series.</div>'+
+      '<p>Fruits &amp; vegetables share is a <b>national constant (~12%)</b> from BLS CE applied to every county.</p>'+
+      '<h3>Limitations</h3><ul><li>Severity is a custom Atlas-derived index, not USDA’s published county LILA rate.</li><li>Desert-containing counties only; some major urban counties may be absent.</li><li>Mixed vintages: Atlas 2019 · stores ~2020 · population ~2023 · CE spend model 2024.</li><li>Weekly grocery and produce figures are modelled / national.</li><li>A few counties have people-affected &gt; population (pipeline issue).</li><li>Boundaries are generalized for web display.</li></ul>'+
+      '<button class="cta" id="method-close">Got it</button>';
+  }
+
+  function bindModals(){
+    var modalEl=document.getElementById("modal"), methodEl=document.getElementById("method");
+    var enter=document.getElementById("enter-btn"), methodClose=document.getElementById("method-close");
+    if(enter) enter.onclick=function(){ modalEl.classList.remove("open"); };
+    if(methodClose) methodClose.onclick=function(){ methodEl.classList.remove("open"); };
+  }
+
+  function renderLanguage(){
+    document.documentElement.lang=lang;
+    document.title=tr("title");
+    var desc=document.querySelector('meta[name="description"]'); if(desc) desc.setAttribute("content",tr("description"));
+    var ogt=document.querySelector('meta[property="og:title"]'); if(ogt) ogt.setAttribute("content",tr("title"));
+    var ogd=document.querySelector('meta[property="og:description"]'); if(ogd) ogd.setAttribute("content",tr("description"));
+    setTxt("tagline",tr("tagline")); setTxt("stat-areas-label",tr("censusDivisions")); setTxt("stat-people-label",tr("peopleLow"));
+    setTxt("method-btn",tr("method")); setTxt("about-btn",tr("about")); setTxt("table-btn",tr("table")); setTxt("us-csv-btn",tr("downloadUsCsv")); setTxt("mobile-us-csv-btn",tr("downloadUsCsv"));
+    setTxt("mobile-method-btn",tr("method")); setTxt("mobile-about-btn",tr("about"));
+    setTxt("mobile-filter-btn",tr("mobileFilters")); setTxt("mobile-table-btn",tr("table")); setTxt("skip-data",tr("skipData"));
+    setTxt("filter-title",tr("filterTitle")); setTxt("threshold-title","Threshold");
+    setTxt("threshold-label",tr("threshold")); setTxt("legend-title",tr("legendTitle")); setTxt("legend-lo",tr("legendLow")); setTxt("legend-hi",tr("legendHigh")); setHtml("legend-note",tr("legendNote"));
+    setTxt("filter-toast-text",tr("filterNoResults")); setTxt("filter-reset",tr("resetFilters"));
+    var toastClose=document.getElementById("filter-toast-close"); if(toastClose) toastClose.setAttribute("aria-label",tr("dismiss"));
+    var search=document.getElementById("search"); if(search){search.placeholder=tr("search"); search.setAttribute("aria-label",tr("search"));}
+    document.querySelectorAll("#tier-chips .chip").forEach(function(c){var tier=c.dataset.tier; c.innerHTML='<span class="sw" style="background:var(--'+tier+')"></span>'+COPY.en.tiers[tier]; c.setAttribute("aria-pressed",!c.classList.contains("off")?"true":"false");});
+    document.querySelectorAll("#setting-seg button").forEach(function(b){b.textContent=COPY.en.settings[b.dataset.setting]; b.setAttribute("aria-pressed",b.classList.contains("active")?"true":"false");});
+    var toggle=document.getElementById("lang-toggle"); if(toggle){toggle.style.display="none";}
+    var mapEl=document.getElementById("map"); if(mapEl) mapEl.setAttribute("aria-label",tr("mapLabel"));
+    setTxt("basemap-notice",tr("basemapNotice"));
+    var mapTools=document.querySelector(".mobile-tools"); if(mapTools) mapTools.setAttribute("aria-label",tr("mobileTools"));
+    var filters=document.getElementById("filters"); if(filters) filters.setAttribute("aria-label",tr("filterTitle"));
+    var panelClose=document.getElementById("panel-close"); if(panelClose) panelClose.setAttribute("aria-label",tr("close"));
+    var aboutBox=document.querySelector("#modal .modal"); if(aboutBox) aboutBox.innerHTML=aboutHtml();
+    var methodBox=document.querySelector("#method .modal"); if(methodBox) methodBox.innerHTML=methodHtml();
+    if(aboutBox){aboutBox.setAttribute("role","dialog"); aboutBox.setAttribute("aria-modal","true"); aboutBox.setAttribute("aria-labelledby","about-title");}
+    if(methodBox){methodBox.setAttribute("role","dialog"); methodBox.setAttribute("aria-modal","true"); methodBox.setAttribute("aria-labelledby","method-title");}
+    setTxt("data-table-tag",tr("tableTag")); setTxt("data-table-title",tr("tableTitle")); setTxt("th-region",tr("tableRegion")); setTxt("th-province",tr("tableProvince"));
+    setTxt("dt-rate",tr("tableRate")); setTxt("dt-people",tr("tablePeople")); setTxt("dt-setting",tr("tableSetting")); setTxt("data-table-close",tr("tableClose"));
+    var tableSearchEl=document.getElementById("table-search"); if(tableSearchEl){tableSearchEl.placeholder=tr("tableSearch"); tableSearchEl.setAttribute("aria-label",tr("tableSearchAria"));}
+    bindModals(); refreshHeadlines(); renderDataTable();
+    if(resultsEl&&resultsEl.classList.contains("open")) renderSearchResults();
+  }
+
+  // ---- headline stats (computed from the data) ----
+  var totalLow=0, provs=new Set();
+  US.features.forEach(function(f){ var p=f.properties; totalLow+=(p.people_affected||0); provs.add(p.province); });
+  function refreshHeadlines(){
+    setTxt("stat-areas", fmt(US.features.length)); setTxt("stat-people", fmt(totalLow));
+    setTxt("m-areas", fmt(US.features.length)); setTxt("m-people", fmt(totalLow)); setTxt("m-provs", fmt(provs.size));
+    setTxt("app-version", APP_VERSION);
+  }
+
+  function setStatus(msg){setTxt("status",msg);}
+
+  var CMP_SIDES=["a","b","c","d"];
+  var cmpMode="counties";
+  var cmpSel={a:null,b:null,c:null,d:null};
+  function cmpByCode(c){for(var i=0;i<US.features.length;i++){if(US.features[i].properties.code===c)return US.features[i].properties;}return null;}
+  function cmpPlaceholders(){
+    return cmpMode==="states"
+      ? {a:"State A…",b:"State B…",c:"State C…",d:"State D…", empty:"Select up to 4 states above to compare them side by side.", entity:"State"}
+      : {a:"County A…",b:"County B…",c:"County C…",d:"County D…", empty:"Select up to 4 counties above to compare them side by side.", entity:"County"};
+  }
+  function syncCmpPlaceholders(){
+    var ph=cmpPlaceholders();
+    CMP_SIDES.forEach(function(side){
+      var input=document.getElementById("cmp-"+side); if(!input) return;
+      input.placeholder=ph[side];
+      input.setAttribute("aria-label","Choose "+ph.entity.toLowerCase()+" "+side.toUpperCase());
+    });
+  }
+  function wireCmp(side){
+    var input=document.getElementById("cmp-"+side), list=document.getElementById("cmp-"+side+"-list");
+    if(!input||input._wired) return; input._wired=true;
+    input.oninput=function(){
+      var q=normQ(input.value); cmpSel[side]=null;
+      if(q.length<1){list.classList.remove("open");list.innerHTML="";renderCompare();return;}
+      var hits=[], i;
+      function matchCountHtml(n){
+        if(n<1) return "";
+        return '<div class="cmp-match-count" role="status" aria-live="polite">'+(n===1?"1 match":(n+" matches"))+'</div>';
+      }
+      if(cmpMode==="states"){
+        var keys=Object.keys(STATE_INDEX).sort();
+        for(i=0;i<keys.length&&hits.length<10;i++){
+          var sn=keys[i];
+          if(normQ(sn).indexOf(q)>-1) hits.push({kind:"state",key:sn,label:sn});
+        }
+        list.innerHTML=matchCountHtml(hits.length)+(hits.length?hits.map(function(h){return '<button type="button" data-key="'+esc(h.key)+'">'+esc(h.label)+'</button>';}).join(""):'<button type="button" disabled>No matching state</button>');
+      } else {
+        if(!wireCmp._stMaps){
+          var nm2ab={}, ab2nm={}, si, sp;
+          for(si=0;si<US.features.length;si++){
+            sp=US.features[si].properties;
+            if(sp.province&&sp.state){
+              nm2ab[deacc(sp.province.toLowerCase())]=sp.state.toLowerCase();
+              ab2nm[sp.state.toLowerCase()]=deacc(sp.province.toLowerCase());
+            }
+          }
+          wireCmp._stMaps={nm2ab:nm2ab,ab2nm:ab2nm};
+        }
+        var sm=wireCmp._stMaps, toks=q.split(/\s+/).filter(Boolean);
+        var wantProv=null, wantAbbr=null, restToks=[];
+        for(i=0;i<toks.length;i++){
+          var tok=toks[i];
+          if(sm.nm2ab[tok]){ wantProv=tok; wantAbbr=sm.nm2ab[tok]; }
+          else if(tok.length===2&&sm.ab2nm[tok]){ wantAbbr=tok; wantProv=sm.ab2nm[tok]; }
+          else restToks.push(tok);
+        }
+        var rest=restToks.join(" ");
+        for(i=0;i<US.features.length;i++){
+          var p=US.features[i].properties;
+          var hay=deacc((p.name+" "+p.province+(p.state?" "+p.state:"")).toLowerCase());
+          var ok;
+          if(wantProv||wantAbbr){
+            var stOk=deacc((p.province||"").toLowerCase())===wantProv||(p.state||"").toLowerCase()===wantAbbr;
+            ok=stOk&&(!rest||deacc((p.name+" "+p.province).toLowerCase()).indexOf(rest)>-1);
+          } else {
+            ok=hay.indexOf(q)>-1;
+          }
+          if(ok) hits.push(p);
+        }
+        hits.sort(function(a,b){
+          if(wantProv||wantAbbr){
+            var aP=deacc((a.province||"").toLowerCase())===wantProv||(a.state||"").toLowerCase()===wantAbbr;
+            var bP=deacc((b.province||"").toLowerCase())===wantProv||(b.state||"").toLowerCase()===wantAbbr;
+            if(aP!==bP) return aP?-1:1;
+          }
+          var ap=deacc((a.province||"").toLowerCase()), bp=deacc((b.province||"").toLowerCase());
+          if(ap<bp) return -1; if(ap>bp) return 1;
+          var an=deacc((a.name||"").toLowerCase()), bn=deacc((b.name||"").toLowerCase());
+          if(an<bn) return -1; if(an>bn) return 1;
+          return 0;
+        });
+        var totalHits=hits.length;
+        if(hits.length>40) hits=hits.slice(0,40);
+        list.innerHTML=matchCountHtml(totalHits)+(hits.length?hits.map(function(p){return '<button type="button" data-code="'+esc(p.code)+'">'+esc(p.name)+' <span style="color:var(--muted)">· '+esc(p.province)+'</span></button>';}).join(""):'<button type="button" disabled>No matching county</button>');
+      }
+      list.classList.add("open");
+      list.querySelectorAll("button[data-code]").forEach(function(b){b.onclick=function(){
+        cmpSel[side]=b.dataset.code; input.value=b.textContent.replace(/\s+/g," ").trim(); list.classList.remove("open"); renderCompare();};});
+      list.querySelectorAll("button[data-key]").forEach(function(b){b.onclick=function(){
+        cmpSel[side]=b.dataset.key; input.value=b.dataset.key; list.classList.remove("open"); renderCompare();};});
+    };
+  }
+  function setCmpMode(mode){
+    if(mode!=="states"&&mode!=="counties") return;
+    if(cmpMode===mode) return;
+    cmpMode=mode;
+    cmpSel={a:null,b:null,c:null,d:null};
+    CMP_SIDES.forEach(function(side){
+      var input=document.getElementById("cmp-"+side), list=document.getElementById("cmp-"+side+"-list");
+      if(input) input.value="";
+      if(list){ list.classList.remove("open"); list.innerHTML=""; }
+    });
+    document.querySelectorAll("#cmp-mode button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-cmp-mode")===cmpMode);
+    });
+    syncCmpPlaceholders();
+    renderCompare();
+  }
+  function wireCmpMode(){
+    var wrap=document.getElementById("cmp-mode"); if(!wrap||wrap._wired) return; wrap._wired=true;
+    wrap.querySelectorAll("button[data-cmp-mode]").forEach(function(b){
+      b.onclick=function(){ setCmpMode(b.getAttribute("data-cmp-mode")); };
+    });
+  }
+  var lastCmpExport=null;
+  function syncCmpCsvBtn(){
+    var btn=document.getElementById("cmp-csv-btn"); if(!btn) return;
+    var ok=!!(lastCmpExport&&lastCmpExport.labels&&lastCmpExport.labels.length>=1&&lastCmpExport.rows&&lastCmpExport.rows.length);
+    btn.hidden=!ok; btn.disabled=!ok;
+  }
+  function downloadCompareCsv(){
+    if(!lastCmpExport||!lastCmpExport.labels||!lastCmpExport.labels.length||!lastCmpExport.rows||!lastCmpExport.rows.length) return;
+    var header=["Metric"].concat(lastCmpExport.labels).map(csvEscape).join(",");
+    var lines=lastCmpExport.rows.map(function(r){ return r.map(csvEscape).join(","); });
+    var slugParts=lastCmpExport.labels.map(function(l){ return slugFile(String(l).replace(/\s*·\s*/g,"-")); }).filter(Boolean);
+    var slug=slugParts.join("-")||"selection";
+    if(slug.length>100) slug=slug.slice(0,100).replace(/-+$/g,"");
+    var fn="food-gap-compare-"+lastCmpExport.mode+"-"+slug+".csv";
+    downloadCsvBlob(fn, header+"\n"+lines.join("\n")+"\n");
+  }
+  function renderCompare(){
+    var tbody=document.getElementById("data-table-body"); if(!tbody) return;
+    var theadRow=document.getElementById("cmp-thead-row");
+    var ph=cmpPlaceholders();
+    var ents=[], labels=[];
+    CMP_SIDES.forEach(function(side){
+      var key=cmpSel[side]; if(!key) return;
+      if(cmpMode==="states"){
+        var S=STATE_INDEX[key]; if(!S) return;
+        ents.push(S); labels.push(S.name);
+      } else {
+        var C=cmpByCode(key); if(!C) return;
+        ents.push(C); labels.push(C.name+(C.province?" · "+C.province:""));
+      }
+    });
+    // Always show 2–4 header slots: filled names, then empty letter placeholders for remaining visible columns (min 2)
+    var colCount=Math.max(2, Math.min(4, ents.length||2));
+    if(ents.length>2) colCount=ents.length;
+    if(theadRow){
+      var heads='<th scope="col">Metric</th>';
+      for(var hi=0; hi<colCount; hi++){
+        var letter=CMP_SIDES[hi].toUpperCase();
+        var title=labels[hi]||(ph.entity+" "+letter);
+        heads+='<th scope="col" id="cmp-h-'+CMP_SIDES[hi]+'">'+esc(title)+'</th>';
+      }
+      theadRow.innerHTML=heads;
+    }
+    if(ents.length<2){
+      tbody.innerHTML='<tr><td colspan="'+(colCount+1)+'">'+esc(ph.empty)+'</td></tr>';
+      lastCmpExport=null; syncCmpCsvBtn();
+      return;
+    }
+    var csvRows=[];
+    function cell(v,win){var col=win===null?"var(--text)":(win?"var(--good)":"var(--moderate)");
+      return '<td class="num" style="font-weight:700;color:'+col+'">'+esc(v)+'</td>';}
+    function row(label, vals, raws, better){
+      csvRows.push([label].concat(vals.map(function(v){ return v==null?"":String(v); })));
+      var wins=vals.map(function(){return null;});
+      if(better){
+        var valid=[], i;
+        for(i=0;i<raws.length;i++){ if(raws[i]!=null&&!isNaN(raws[i])) valid.push({i:i,v:raws[i]}); }
+        if(valid.length>=2){
+          var best=valid[0].v;
+          for(i=1;i<valid.length;i++){
+            if(better==="low"?valid[i].v<best:valid[i].v>best) best=valid[i].v;
+          }
+          // mark winners; if ties, all tying get win; others lose only if strictly worse
+          var anyDiff=false;
+          for(i=0;i<valid.length;i++){ if(valid[i].v!==best) anyDiff=true; }
+          if(anyDiff){
+            for(i=0;i<valid.length;i++){
+              wins[valid[i].i]=(valid[i].v===best);
+            }
+          }
+        }
+      }
+      var cells="";
+      for(var j=0;j<vals.length;j++) cells+=cell(vals[j],wins[j]);
+      return '<tr><td>'+esc(label)+'</td>'+cells+'</tr>';
+    }
+    if(cmpMode==="states"){
+      tbody.innerHTML=
+        row("Pop-weighted severity (0–100)", ents.map(function(S){return num(S.rate)?"—":S.rate+" / 100";}), ents.map(function(S){return S.rate;}), "low")+
+        row("Severity level", ents.map(function(S){var t=tierInfo(S.tier);return t?t.label:S.tier;}), ents.map(function(){return null;}), null)+
+        row("Desert-containing counties", ents.map(function(S){return fmt(S.county_count);}), ents.map(function(S){return S.county_count;}), "low")+
+        row("Food-desert tracts (sum)", ents.map(function(S){return fmt(S.num_deserts);}), ents.map(function(S){return S.num_deserts;}), "low")+
+        row("People with low food access (sum)", ents.map(function(S){return fmt(S.people_affected);}), ents.map(function(S){return S.people_affected;}), "low")+
+        row("Population in those counties (sum)", ents.map(function(S){return !num(S.population)?fmt(S.population):"n/a";}), ents.map(function(){return null;}), null)+
+        row("Grocery stores (sum)", ents.map(function(S){return !num(S.stores)?fmt(S.stores):"n/a";}), ents.map(function(S){return S.stores;}), "high")+
+        row("Median family income (pop-weighted)", ents.map(function(S){return !num(S.median_income)?money(S.median_income):"n/a";}), ents.map(function(S){return S.median_income;}), "high")+
+        row("Modelled weekly grocery (pop-weighted)", ents.map(function(S){return !num(S.grocery_weekly)?money(S.grocery_weekly):"n/a";}), ents.map(function(){return null;}), null)+
+        row("Produce share (national constant)", ents.map(function(S){return !num(S.produce_pct)?pct(S.produce_pct):"n/a";}), ents.map(function(){return null;}), null);
+    } else {
+      var tl=function(p){var t=tierInfo(p.tier);return t?t.label:p.tier;};
+      tbody.innerHTML=
+        row("Severity index (0–100)", ents.map(function(A){return A.rate+" / 100";}), ents.map(function(A){return A.rate;}), "low")+
+        row("Severity level", ents.map(function(A){return tl(A);}), ents.map(function(){return null;}), null)+
+        row("Food-desert tracts", ents.map(function(A){return fmt(A.num_deserts);}), ents.map(function(A){return A.num_deserts;}), "low")+
+        row("People with low food access", ents.map(function(A){return fmt(A.people_affected);}), ents.map(function(A){return A.people_affected;}), "low")+
+        row("County population", ents.map(function(A){return !num(A.population)?fmt(A.population)+" ("+(A.pop_year||"")+" est.)":"n/a";}), ents.map(function(){return null;}), null)+
+        row("Grocery stores", ents.map(function(A){return !num(A.stores)?fmt(A.stores)+" ("+(A.stores_year||"")+")":"n/a";}), ents.map(function(A){return A.stores;}), "high")+
+        row("Poverty rate", ents.map(function(A){return pct(A.poverty_rate);}), ents.map(function(A){return A.poverty_rate;}), "low")+
+        row("Median family income", ents.map(function(A){return !num(A.median_income)?money(A.median_income):"n/a";}), ents.map(function(A){return A.median_income;}), "high")+
+        row("Households without a vehicle", ents.map(function(A){return pct(A.no_vehicle_share);}), ents.map(function(A){return A.no_vehicle_share;}), "low")+
+        row("Life expectancy (yrs)", ents.map(function(A){return !num(A.life_expectancy)?A.life_expectancy:"n/a";}), ents.map(function(A){return A.life_expectancy;}), "high")+
+        row("Households receiving SNAP", ents.map(function(A){return pct(A.snap_rate);}), ents.map(function(A){return A.snap_rate;}), "low")+
+        row("Low-access population share", ents.map(function(A){return pct(A.low_access_pop_share);}), ents.map(function(A){return A.low_access_pop_share;}), "low");
+    }
+    lastCmpExport={mode:cmpMode,labels:labels.slice(),rows:csvRows};
+    syncCmpCsvBtn();
+  }
+  function renderDataTable(){
+    wireCmpMode();
+    syncCmpPlaceholders();
+    CMP_SIDES.forEach(wireCmp);
+    renderCompare();
+  }
+  renderLanguage();
+
+
+  var _p=new URLSearchParams(location.search); var pendingRegion=_p.get("region")||_p.get("prov"); var pendingState=_p.get("state");
+  if(pendingRegion||pendingState){ var im=document.getElementById("modal"); if(im) im.classList.remove("open"); }
+
+  // ---- map (framed on the United States) ----
+  function baseMapStyle(){
+    if(forceBasemapOff) return {version:8,sources:{},layers:[{id:"bg",type:"background",paint:{"background-color":"#0b0f14"}}]};
+    // OpenFreeMap — no API key; avoids CARTO "API KEY REQUIRED" watermarks
+    return "https://tiles.openfreemap.org/styles/dark";
+  }
+  var map=new maplibregl.Map({container:"map",style:baseMapStyle(),
+    center:[-97,38],zoom:3,minZoom:1.8,maxZoom:13,maxBounds:[[-179,15],[-55,75]],dragRotate:false,attributionControl:true});
+  map.touchZoomRotate.disableRotation();
+  if(window.innerWidth<=720) map.setMinZoom(1.0); map.addControl(new maplibregl.NavigationControl({showCompass:false}),"bottom-right");
+  var colorExpr=["match",["get","tier"],"critical","#e64545","severe","#f0562e","moderate","#fb9a3c","minor","#fdcc5c","#888"];
+  var HOME=[[-124.7,24.3],[-66.9,49.5]];
+  var MOB=function(){return window.innerWidth<=720;};
+  function safePad(p){ try{var c=map.getContainer(),w=c.clientWidth,h=c.clientHeight;
+    var q={top:p.top||0,bottom:p.bottom||0,left:p.left||0,right:p.right||0},s;
+    if(q.left+q.right>w*0.9){s=(w*0.9)/(q.left+q.right);q.left=Math.floor(q.left*s);q.right=Math.floor(q.right*s);}
+    if(q.top+q.bottom>h*0.9){s=(h*0.9)/(q.top+q.bottom);q.top=Math.floor(q.top*s);q.bottom=Math.floor(q.bottom*s);}
+    return q;}catch(e){return {top:20,bottom:20,left:20,right:20};} }
+  function fitSafe(b,o){ try{o=o||{};o.padding=safePad(o.padding||{});map.fitBounds(b,o);}catch(e){} }
+  function mobilePanelPad(){
+    var top=84, bottom=Math.round(window.innerHeight*0.52)+24, left=24, right=24;
+    try{
+      var mr=map.getContainer().getBoundingClientRect();
+      var ph=panel.offsetHeight || Math.round(window.innerHeight*0.5);
+      /* use layout height (not transformed rect) so padding is correct mid-slide */
+      var panelTopOpen=window.innerHeight - ph;
+      bottom=Math.max(48, Math.round(mr.bottom - panelTopOpen)+24);
+      var hdr=document.querySelector("header");
+      if(hdr){ var hr=hdr.getBoundingClientRect(); top=Math.max(64, Math.round(hr.bottom-mr.top)+12); }
+    }catch(e){}
+    return {top:top,bottom:bottom,left:left,right:right};
+  }
+  function fitWithPanel(bb,o){
+    o=o||{};
+    if(!MOB()){ fitSafe(bb,Object.assign({padding:{top:70,bottom:70,left:60,right:430}},o)); return; }
+    fitSafe(bb,Object.assign({},o,{padding:mobilePanelPad()}));
+    requestAnimationFrame(function(){
+      setTimeout(function(){
+        fitSafe(bb,Object.assign({},o,{padding:mobilePanelPad(),duration:0}));
+      },40);
+    });
+  }
+  function fit(){ fitSafe(HOME,{padding:MOB()?{top:130,bottom:24,left:12,right:12}:{top:120,bottom:44,left:44,right:300},duration:0}); }
+  function hasDivisionSource(){ return map.getSource && !!map.getSource("divisions"); }
+  var basemapFailed=false;
+  function showBasemapFallback(){
+    if(basemapFailed) return;
+    basemapFailed=true;
+    var notice=document.getElementById("basemap-notice"); if(notice) notice.classList.add("open");
+    setStatus(tr("basemapNotice"));
+    try{ /* vector basemap: leave style; choropleth still draws */ }catch(e){}
+  }
+  map.on("error",function(e){
+    var msg=(e&&e.error&&(e.error.message||String(e.error)))||"";
+    if((e&&e.sourceId==="openfreemap")||/openfreemap|basemaps\.cartocdn|carto|tile|Failed to fetch|NetworkError/i.test(msg)) showBasemapFallback();
+  });
+  if(forceBasemapOff) setTimeout(showBasemapFallback,0);
+
+  map.on("load",function(){
+    map.addSource("divisions",{type:"geojson",data:US,promoteId:"code"});
+    map.addLayer({id:"division-fill",type:"fill",source:"divisions",paint:{"fill-antialias":false,"fill-color":colorExpr,
+      "fill-opacity":["case",["boolean",["feature-state","selected"],false],0.95,["boolean",["feature-state","hover"],false],0.9,0.68]}});
+    map.addLayer({id:"division-line",type:"line",source:"divisions",paint:{
+      "line-color":["case",["boolean",["feature-state","selected"],false],"#ffffff",["boolean",["feature-state","hover"],false],"#f0562e","rgba(150,160,170,0.35)"],
+      "line-width":["case",["boolean",["feature-state","selected"],false],3,["boolean",["feature-state","hover"],false],2,0.6]}});
+    var ph=null;
+    var mapTip=document.getElementById("map-tip");
+    var suppressMouseUntil=0;
+    function hideMapTip(){ if(mapTip){ mapTip.classList.remove("open","above"); mapTip.setAttribute("aria-hidden","true"); mapTip.textContent=""; } }
+    function hoverTipLabel(p){
+      var nm=nameOf(p)||"", st=p.state||"", prov=provinceOf(p)||"";
+      /* Match click: national / zoomed-out → state; else county (ST only when state not already focused). */
+      if(viewMode==="national" || (!focusedState && map.getZoom()<5.5)) return prov||nm;
+      if(focusedState) return nm;
+      return st?(nm+", "+st):nm;
+    }
+    function setHoverId(id){
+      if(ph===id) return;
+      if(ph!==null){ try{map.setFeatureState({source:"divisions",id:ph},{hover:false});}catch(err){} }
+      ph=id;
+      if(ph!==null){ try{map.setFeatureState({source:"divisions",id:ph},{hover:true});}catch(err){} }
+    }
+    function showMapTipAt(clientX,clientY,p,above){
+      if(!mapTip||!p) return;
+      var label=hoverTipLabel(p); if(!label){ hideMapTip(); return; }
+      mapTip.textContent=label;
+      mapTip.classList.toggle("above",!!above);
+      mapTip.classList.add("open");
+      mapTip.setAttribute("aria-hidden","false");
+      mapTip.style.left=clientX+"px"; mapTip.style.top=clientY+"px";
+    }
+    function showMapTip(e,p){
+      var x=(e.originalEvent&&e.originalEvent.clientX!=null)?e.originalEvent.clientX:e.point.x;
+      var y=(e.originalEvent&&e.originalEvent.clientY!=null)?e.originalEvent.clientY:e.point.y;
+      showMapTipAt(x,y,p,false);
+    }
+    function tipFromMapPoint(point,clientX,clientY,above){
+      if(!point){ setHoverId(null); hideMapTip(); return; }
+      var feats=map.queryRenderedFeatures(point,{layers:["division-fill"]});
+      if(!feats||!feats.length){ setHoverId(null); hideMapTip(); return; }
+      var f=feats[0];
+      setHoverId(f.id);
+      showMapTipAt(clientX,clientY,f.properties,above);
+    }
+    function touchClient(e){
+      var oe=e.originalEvent||e;
+      var t=(oe.touches&&oe.touches[0])||(oe.changedTouches&&oe.changedTouches[0]);
+      return t?{x:t.clientX,y:t.clientY}:null;
+    }
+    function onMapTouch(e){
+      suppressMouseUntil=Date.now()+600;
+      var c=touchClient(e); if(!c) return;
+      tipFromMapPoint(e.point,c.x,c.y,true);
+    }
+    function endMapTouch(){
+      suppressMouseUntil=Date.now()+600;
+      setHoverId(null); hideMapTip();
+    }
+    map.on("mousemove","division-fill",function(e){var f=e.features[0]; if(!f) return; map.getCanvas().style.cursor="pointer";
+      if(Date.now()<suppressMouseUntil) return;
+      setHoverId(f.id);
+      showMapTip(e,f.properties);});
+    map.on("touchstart",onMapTouch);
+    map.on("touchmove",onMapTouch);
+    map.on("touchend",endMapTouch);
+    map.on("touchcancel",endMapTouch);
+    window.__clearHover=function(){ setHoverId(null); hideMapTip(); };
+    map.on("mouseleave","division-fill",function(){ if(Date.now()<suppressMouseUntil) return; map.getCanvas().style.cursor=""; setHoverId(null); hideMapTip();});
+    map.on("click","division-fill",function(e){
+      var f=e.features[0]; if(!f) return;
+      var p=f.properties, prov=provinceOf(p);
+      // National view (or zoomed out with no focus): open state stats, not a random county
+      if(viewMode==="national" || (!focusedState && map.getZoom()<5.5)){
+        selectState(prov); return;
+      }
+      if(focusedState && prov!==focusedState){ selectState(prov); return; }
+      selectDivision(p,f.geometry);
+    });
+    fit(); applyFilter(); updateFocusPaint();
+    if(pendingRegion) openByCode(pendingRegion);
+    else if(pendingState && STATE_INDEX[pendingState]) selectState(pendingState);
+  });
+
+  // ---- national / state / county view ----
+  var viewMode="national", focusedState=null, STATE_INDEX={};
+
+  // ---- detail panel ----
+  var panel=document.getElementById("panel"), body=document.getElementById("panel-body");
+  function cmpRow(label,val,nat,min,max,unit,flip,prefix,displayVal){
+    if(num(val)||num(nat)) return "";
+    var sp=max-min,w=Math.max(2,Math.min(100,((val-min)/sp)*100)),np=Math.max(0,Math.min(100,((nat-min)/sp)*100));
+    var worse=flip?val<nat:val>nat;                       // flip: for metrics where LOWER is the concern
+    var col=worse?"var(--accent)":"var(--good)";
+    var shown=displayVal||((prefix||"")+val+(unit||""));
+    return '<div class="cmp-row"><div class="cmp-head"><span class="k">'+label+'</span><span class="v" style="color:'+col+'">'+shown+'</span></div>'+
+      '<div class="track"><div class="fill" style="width:'+w+'%;background:'+col+'"></div><div class="natmark" style="left:'+np+'%"></div></div></div>';
+  }
+  var curKey=null, selectedDivision=null, currentSelection=null;
+  function clearSelected(){ if(selectedDivision!==null){ if(hasDivisionSource()) map.setFeatureState({source:"divisions",id:selectedDivision},{selected:false}); selectedDivision=null; } }
+  function bboxOf(geom){var b=[180,90,-180,-90];
+    var scan=function(cs){for(var i=0;i<cs.length;i++){var x=cs[i][0],y=cs[i][1]; if(x<b[0])b[0]=x; if(y<b[1])b[1]=y; if(x>b[2])b[2]=x; if(y>b[3])b[3]=y;}};
+    var polys=geom.type==="Polygon"?[geom.coordinates]:geom.coordinates; polys.forEach(function(p){p.forEach(function(r){scan(r);});}); return b;}
+  function rateToTier(r){
+    if(num(r)) return "moderate";
+    if(r>=59) return "critical";
+    if(r>=48) return "severe";
+    if(r>=39) return "moderate";
+    return "minor";
+  }
+  function mergeBbox(b,geom){
+    var nb=bboxOf(geom);
+    if(nb[0]<b[0])b[0]=nb[0]; if(nb[1]<b[1])b[1]=nb[1];
+    if(nb[2]>b[2])b[2]=nb[2]; if(nb[3]>b[3])b[3]=nb[3];
+    return b;
+  }
+  (function buildStateIndex(){
+    US.features.forEach(function(f){
+      var p=f.properties, st=p.province; if(!st) return;
+      if(!STATE_INDEX[st]){
+        STATE_INDEX[st]={name:st,state:p.state||"",county_count:0,people_affected:0,population:0,stores:0,num_deserts:0,
+          rate_wsum:0,rate_wpop:0,rate_sum:0,rate_n:0,income_wsum:0,income_wpop:0,grocery_wsum:0,grocery_wpop:0,
+          bbox:[180,90,-180,-90],counties:[]};
+      }
+      var S=STATE_INDEX[st];
+      S.county_count++;
+      S.people_affected+=(p.people_affected||0);
+      S.population+=(p.population||0);
+      S.stores+=(p.stores||0);
+      S.num_deserts+=(p.num_deserts||0);
+      if(!num(p.rate)){
+        S.rate_sum+=p.rate; S.rate_n++;
+        if(!num(p.population)&&p.population>0){ S.rate_wsum+=p.rate*p.population; S.rate_wpop+=p.population; }
+      }
+      if(!num(p.median_income)&&!num(p.population)&&p.population>0){ S.income_wsum+=p.median_income*p.population; S.income_wpop+=p.population; }
+      if(!num(p.grocery_weekly)&&!num(p.population)&&p.population>0){ S.grocery_wsum+=p.grocery_weekly*p.population; S.grocery_wpop+=p.population; }
+      mergeBbox(S.bbox,f.geometry);
+      S.counties.push({code:p.code,name:p.name,rate:p.rate,tier:p.tier,people_affected:p.people_affected||0});
+    });
+    Object.keys(STATE_INDEX).forEach(function(k){
+      var S=STATE_INDEX[k];
+      S.rate=S.rate_wpop>0?Math.round(S.rate_wsum/S.rate_wpop):(S.rate_n?Math.round(S.rate_sum/S.rate_n):null);
+      S.tier=rateToTier(S.rate);
+      S.median_income=S.income_wpop>0?Math.round(S.income_wsum/S.income_wpop):null;
+      S.grocery_weekly=S.grocery_wpop>0?Math.round(S.grocery_wsum/S.grocery_wpop):null;
+      S.produce_pct=USPEND.produce_pct;
+      S.counties.sort(function(a,b){ return (b.rate||0)-(a.rate||0); });
+    });
+  })();
+  function updateFocusPaint(){
+    if(!map.getLayer||!map.getLayer("division-fill")) return;
+    var sel=["boolean",["feature-state","selected"],false], hov=["boolean",["feature-state","hover"],false];
+    if(focusedState){
+      map.setPaintProperty("division-fill","fill-opacity",["case",["!=",["get","province"],focusedState],0.12,["case",sel,0.95,hov,0.92,0.8]]);
+      map.setPaintProperty("division-line","line-opacity",["case",["!=",["get","province"],focusedState],0.15,1]);
+    } else {
+      map.setPaintProperty("division-fill","fill-opacity",["case",sel,0.95,hov,0.9,0.68]);
+      map.setPaintProperty("division-line","line-opacity",1);
+    }
+  }
+  function panelNavHtml(parts, backAction, backLabel){
+    var out=[];
+    for(var i=0;i<parts.length;i++){
+      if(i) out.push('<span class="sep">›</span>');
+      var pt=parts[i];
+      if(pt.action) out.push('<button type="button" data-crumb="'+esc(pt.action)+'">'+esc(pt.label)+'</button>');
+      else out.push('<span class="here">'+esc(pt.label)+'</span>');
+    }
+    return '<div class="p-nav">'+
+      '<button type="button" class="p-back" id="panel-back" data-back="'+esc(backAction)+'">← Back'+(backLabel?' · '+esc(backLabel):'')+'</button>'+
+      '<div class="p-crumb" id="panel-crumb">'+out.join("")+'</div></div>';
+  }
+  function wirePanelNav(){
+    var el=document.getElementById("panel-crumb"); if(el){
+      el.querySelectorAll("button[data-crumb]").forEach(function(b){
+        b.onclick=function(){
+          var a=b.getAttribute("data-crumb");
+          if(a==="national") selectNational();
+          else if(a.indexOf("state:")===0) selectState(a.slice(6));
+        };
+      });
+    }
+    var back=document.getElementById("panel-back"); if(back){
+      back.onclick=function(){
+        var a=back.getAttribute("data-back");
+        if(a==="national") selectNational();
+        else if(a.indexOf("state:")===0) selectState(a.slice(6));
+      };
+    }
+  }
+  var CSV_COLS=["record_type","code","name","state","state_abbr","tier","severity_rate","people_affected","population","stores","num_deserts","median_income","poverty_rate","snap_rate","grocery_weekly","grocery_scope","produce_pct","setting","low_access_pop_share","no_vehicle_share","life_expectancy"];
+  var CSV_HEADER=CSV_COLS.join(",");
+  function csvEscape(v){
+    if(v===null||v===undefined) return "";
+    var s=String(v);
+    if(/[",\n\r]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+    return s;
+  }
+  function countyCsvRow(p){
+    return [
+      "county", p.code, p.name, p.province, p.state, p.tier, p.rate, p.people_affected, p.population,
+      p.stores, p.num_deserts, p.median_income, p.poverty_rate, p.snap_rate,
+      p.grocery_weekly, p.grocery_scope, p.produce_pct, p.setting,
+      p.low_access_pop_share, p.no_vehicle_share, p.life_expectancy
+    ].map(csvEscape).join(",");
+  }
+  function stateCsvRow(S){
+    return [
+      "state", S.state||"STATE", S.name, S.name, S.state||"", S.tier, S.rate, S.people_affected, S.population,
+      S.stores, S.num_deserts, S.median_income, "", "",
+      S.grocery_weekly, "", S.produce_pct, "state aggregate",
+      "", "", ""
+    ].map(csvEscape).join(",");
+  }
+  function slugFile(s){ return String(s||"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,""); }
+  function downloadCsvBlob(filename, body){
+    var blob=new Blob([body],{type:"text/csv;charset=utf-8"});
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{URL.revokeObjectURL(a.href);}catch(e){} document.body.removeChild(a); },400);
+  }
+  function downloadCountiesCsv(features, filename){
+    var rows=features.map(function(f){ return countyCsvRow(f.properties||f); });
+    downloadCsvBlob(filename, CSV_HEADER+"\n"+rows.join("\n")+"\n");
+  }
+  function downloadStateCsv(S, filename){
+    var feats=US.features.filter(function(f){ return f.properties.province===S.name; });
+    feats.sort(function(a,b){
+      var na=(a.properties&&a.properties.name)||"", nb=(b.properties&&b.properties.name)||"";
+      return na.localeCompare(nb, undefined, {sensitivity:"base"});
+    });
+    var rows=[stateCsvRow(S)].concat(feats.map(function(f){ return countyCsvRow(f.properties||f); }));
+    downloadCsvBlob(filename, CSV_HEADER+"\n"+rows.join("\n")+"\n");
+  }
+  function honestyPlain(){
+    return "Note: Severity is a custom index from USDA Food Access Research Atlas 2019 tract data — not a published USDA county LILA percentage. Weekly grocery figures are modelled from BLS CE national food-at-home spending; produce share is a national constant. State figures (when shown) aggregate desert-containing counties only.";
+  }
+  function valOrDash(v, formatter){
+    if(num(v)) return "—";
+    return formatter?formatter(v):String(v);
+  }
+  function buildCountyCopyText(p){
+    var t=tierInfo(p.tier);
+    var lines=[
+      "THE FOOD GAP · UNITED STATES",
+      nameOf(p)+" · "+provinceOf(p)+" ("+(p.state||"")+")",
+      "",
+      "Severity index: "+valOrDash(p.rate, function(n){return n+" / 100";})+" ("+(t?t.label:"")+")",
+      "Setting: "+(p.setting||"—"),
+      "Food-desert tracts: "+fmt(p.num_deserts),
+      "People with low food access: "+fmt(p.people_affected),
+      "County population: "+valOrDash(p.population, fmt)+(p.pop_year?" ("+p.pop_year+" est.)":""),
+      "Grocery stores: "+valOrDash(p.stores, fmt)+(p.stores_year?" ("+p.stores_year+")":""),
+      "Poverty rate: "+valOrDash(p.poverty_rate, pct),
+      "Median family income: "+valOrDash(p.median_income, money),
+      "Households without a vehicle: "+valOrDash(p.no_vehicle_share, pct),
+      "Avg life expectancy (yrs): "+valOrDash(p.life_expectancy),
+      "Households receiving SNAP: "+valOrDash(p.snap_rate, pct),
+      "Low-access population share: "+valOrDash(p.low_access_pop_share, pct),
+      "Modelled weekly grocery: "+valOrDash(p.grocery_weekly, money)+(p.grocery_scope?" ("+p.grocery_scope+")":""),
+      "Produce share of groceries: "+valOrDash(p.produce_pct, pct)+(p.produce_scope?" ("+p.produce_scope+")":"")
+    ];
+    lines.push(""); lines.push(honestyPlain()); lines.push("");
+    lines.push(location.origin+langUrl(p.code));
+    return lines.join("\n");
+  }
+  function buildStateCopyText(S){
+    var t=tierInfo(S.tier);
+    var lines=[
+      "THE FOOD GAP · UNITED STATES",
+      S.name+" ("+(S.state||"")+") · state summary (desert counties only)",
+      "",
+      "Pop-weighted severity: "+valOrDash(S.rate, function(n){return n+" / 100";})+" ("+(t?t.label:"")+" state aggregate)",
+      "Desert-containing counties: "+fmt(S.county_count),
+      "People with low food access (sum): "+fmt(S.people_affected),
+      "Population in those counties (sum): "+valOrDash(S.population, fmt),
+      "Grocery stores (sum): "+valOrDash(S.stores, fmt),
+      "Food-desert tracts (sum): "+fmt(S.num_deserts),
+      "Median family income (pop-weighted, Atlas): "+valOrDash(S.median_income, money),
+      "Modelled weekly grocery (pop-weighted): "+valOrDash(S.grocery_weekly, money),
+      "Produce share (national constant): "+valOrDash(S.produce_pct, pct)
+    ];
+    lines.push(""); lines.push(honestyPlain()); lines.push("");
+    lines.push(location.origin+langUrl(null,S.name));
+    return lines.join("\n");
+  }
+  function copyPlain(btn, text){
+    var o=btn.textContent;
+    var done=function(){btn.textContent="Copied ✓"; setTimeout(function(){btn.textContent=o;},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,function(){fb(text,done);});} else fb(text,done);
+  }
+  function panelActionsHtml(opts){
+    // opts: {copyDataId, copyLinkId, downloadId, downloadLabel, primaryCopyLabel}
+    return '<div class="panel-actions">'+
+      '<button class="copylink" id="'+opts.copyDataId+'">'+tr("copyData")+'</button>'+
+      '<button class="copylink secondary" id="'+opts.copyLinkId+'">'+tr("copyLink")+'</button>'+
+      '<button class="copylink secondary" id="'+opts.downloadId+'">'+opts.downloadLabel+'</button>'+
+      '</div>';
+  }
+
+  function selectNational(){
+    viewMode="national"; focusedState=null; curKey=null; currentSelection=null; clearSelected();
+    updateFocusPaint();
+    panel.classList.remove("open"); document.body.classList.remove("panel-open");
+    try{ history.replaceState(null,"",langUrl(null)); }catch(e){}
+    setStatus("United States");
+    fitSafe(HOME,{padding:MOB()?{top:130,bottom:24,left:12,right:12}:{top:120,bottom:44,left:44,right:40},duration:dur(700)});
+  }
+  function selectState(stateName){
+    var S=STATE_INDEX[stateName]; if(!S) return;
+    viewMode="state"; focusedState=stateName; curKey=null; currentSelection=null; clearSelected();
+    updateFocusPaint();
+    var t=tierInfo(S.tier);
+    var nc=!num(S.rate)&&(S.rate>USNAT)?tr("above"):tr("below");
+    var narr="<b>"+esc(S.name)+"</b> has <b>"+fmt(S.county_count)+" desert-containing counties</b> on this map (not every county in the state). Across them, about <b>"+fmt(S.people_affected)+" residents</b> have low supermarket access (pipeline sum). Population-weighted severity is <b>"+(num(S.rate)?"—":S.rate+" / 100")+"</b> — <b>"+nc+"</b> the mean of "+USNAT+" across the 2,083 desert-containing counties nationally.";
+    var listHtml=S.counties.map(function(c){
+      var ct=tierInfo(c.tier);
+      return '<button type="button" data-code="'+esc(c.code)+'"><span class="dot" style="background:'+ct.color+'"></span><span class="cn">'+esc(c.name)+'<span class="cp">'+fmt(c.people_affected)+' people</span></span><span class="cr">'+(num(c.rate)?"—":c.rate)+'</span></button>';
+    }).join("");
+    body.innerHTML=panelNavHtml([{label:"United States",action:"national"},{label:S.name,action:null}],"national","United States")+
+      '<div class="p-hero"><span class="tier-chip" style="background:'+t.color+'" title="Population-weighted aggregate of desert-containing counties">'+t.label+' state aggregate</span>'+
+      '<h2 id="panel-title" tabindex="-1">'+esc(S.name)+'</h2><div class="loc">'+esc(S.state||S.name)+', USA · state summary (desert counties only)</div>'+
+      '<div class="score-row"><span class="big" style="color:'+t.color+'">'+(num(S.rate)?"—":S.rate+" / 100")+'</span><span class="lbl">pop-weighted severity (custom index)</span></div>'+
+      panelActionsHtml({copyDataId:"copydata",copyLinkId:"copylink",downloadId:"download-csv",downloadLabel:tr("downloadStateCsv")})+'</div>'+
+      '<div class="narrative">'+narr+'</div><div class="section-t">'+tr("numbers")+'</div><div class="grid">'+
+      '<div class="stat"><div class="v">'+fmt(S.county_count)+'</div><div class="k">Desert-containing counties</div></div>'+
+      '<div class="stat"><div class="v">'+fmt(S.people_affected)+'</div><div class="k">People with low food access (sum)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(S.population)?fmt(S.population):tr("noData"))+'</div><div class="k">Population in those counties (sum)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(S.stores)?fmt(S.stores):tr("noData"))+'</div><div class="k">Grocery stores (sum)</div></div>'+
+      '<div class="stat"><div class="v">'+fmt(S.num_deserts)+'</div><div class="k">Food-desert tracts (sum)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(S.median_income)?money(S.median_income):tr("noData"))+'</div><div class="k">Median family income (pop-weighted, Atlas)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(S.grocery_weekly)?money(S.grocery_weekly):tr("noData"))+'</div><div class="k">Modelled weekly grocery (pop-weighted)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(S.produce_pct)?pct(S.produce_pct):tr("noData"))+'</div><div class="k">Produce share (national constant)</div></div>'+
+      '</div>'+
+      '<div class="section-t">Counties by severity</div><div class="county-list" id="state-county-list">'+listHtml+'</div>'+
+      '<div class="p-foot">'+tr("panelFoot")+' State figures are <b>aggregates of desert-containing counties only</b> — not official statewide USDA rates.</div>';
+    wirePanelNav();
+    var list=document.getElementById("state-county-list");
+    if(list) list.querySelectorAll("button[data-code]").forEach(function(b){
+      b.onclick=function(){ var f=BYCODE[b.getAttribute("data-code")]; if(f) selectDivision(f.properties,f.geometry,true); };
+    });
+    var cd=document.getElementById("copydata"); if(cd) cd.onclick=function(){copyPlain(cd, buildStateCopyText(S));};
+    var cl=document.getElementById("copylink"); if(cl) cl.onclick=function(){copyPlain(cl, location.origin+langUrl(null,S.name));};
+    var dl=document.getElementById("download-csv"); if(dl) dl.onclick=function(){
+      downloadStateCsv(S, "foodgap-"+slugFile(S.name)+".csv");
+    };
+    panel.classList.add("open"); document.body.classList.add("panel-open");
+    closeFiltersQuietly();
+    setStatus("State: "+S.name);
+    try{ history.replaceState(null,"",langUrl(null,S.name)); }catch(e){}
+    var bb=S.bbox;
+    fitWithPanel([[bb[0],bb[1]],[bb[2],bb[3]]],{maxZoom:6.5,duration:dur(800)});
+    var heading=document.getElementById("panel-title"); if(heading) heading.focus({preventScroll:true});
+  }
+  function selectDivision(p,geom,moveFocus){
+    var t=tierInfo(p.tier); curKey=p.code; currentSelection={p:p,geom:geom};
+    var displayName=nameOf(p), displayOfficial=officialOf(p), displayProv=provinceOf(p);
+    viewMode="county"; focusedState=displayProv; updateFocusPaint();
+    var nc=p.rate>USNAT?tr("above"):tr("below");
+    var gw=p.grocery_weekly, pp=p.produce_pct, gs=scopeOf(p,"grocery_scope")||"avg", ps=scopeOf(p,"produce_scope")||gs, mi=p.median_income;
+    var lp=p.lettuce_price, lv=p.lettuce_verdict, ls=scopeOf(p,"lettuce_scope")||"avg", ln=noteOf(p)||"";
+    var lvLabel=COPY.en.lettuceLabels[lv]||COPY.en.lettuceLabels.middle;
+    var lvColor=lv==="cheap"?"var(--good)":(lv==="expensive"?"var(--critical)":"var(--moderate)");
+    var spendLine="";
+    if(!num(gw)&&!num(pp)) spendLine=" "+text(tr("spendBoth"),{money:money(gw),scope:esc(gs),produce:pct(pp),pscope:esc(ps)})+(gw>=220?tr("spendHigh"):"");
+    else if(!num(gw)) spendLine=" "+text(tr("spendOnly"),{money:money(gw),scope:esc(gs)});
+    var incomePhrase="USDA Food Access Research Atlas, 2019";
+    var worstL=p.worst; if(typeof worstL==="string"){try{worstL=JSON.parse(worstL);}catch(e){worstL=[];}}
+    var narr="<b>"+esc(displayName)+"</b> ("+esc(displayProv)+") contains <b>"+fmt(p.num_deserts)+" food-desert "+(p.num_deserts===1?"tract":"tracts")+"</b> where about <b>"+fmt(p.people_affected)+" residents</b> have low supermarket access (pipeline estimate). Custom severity is <b>"+p.rate+" / 100</b> — <b>"+nc+"</b> the mean of "+USNAT+" across the 2,083 desert-containing counties on this map.";
+    var tierChipText=t.label+" "+tr("tierChip");
+    body.innerHTML=panelNavHtml([{label:"United States",action:"national"},{label:displayProv,action:"state:"+displayProv},{label:displayName,action:null}],"state:"+displayProv,displayProv)+
+      '<div class="p-hero"><span class="tier-chip" style="background:'+t.color+'" title="'+esc(tr("ranked"))+'">'+tierChipText+'</span>'+
+      '<h2 id="panel-title" tabindex="-1">'+esc(displayName)+'</h2><div class="loc">'+(displayOfficial?esc(displayOfficial)+' · ':'')+esc(displayProv)+', USA · '+tr("censusDivision")+'<span class="setting-badge">'+(COPY.en.badge[p.setting]||p.setting||'')+'</span></div>'+
+      '<div class="score-row"><span class="big" style="color:'+t.color+'">'+(p.rate+" / 100")+'</span><span class="lbl">'+tr("lowIncomeLabel")+'</span></div>'+
+      panelActionsHtml({copyDataId:"copydata",copyLinkId:"copylink",downloadId:"download-csv",downloadLabel:tr("downloadCountyCsv")})+'</div>'+
+      '<div class="narrative">'+narr+spendLine+'</div><div class="section-t">'+tr("numbers")+'</div><div class="grid">'+
+      '<div class="stat"><div class="v">'+fmt(p.num_deserts)+'</div><div class="k">Food-desert tracts</div></div>'+
+      '<div class="stat"><div class="v">'+fmt(p.people_affected)+'</div><div class="k">People with low food access</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.population)?fmt(p.population):tr("noData"))+'</div><div class="k">County population ('+(p.pop_year||2023)+' est.)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.stores)?fmt(p.stores):tr("noData"))+'</div><div class="k">Grocery stores in county ('+(p.stores_year||2020)+')'+(!num(p.stores_per_1k)?' · '+p.stores_per_1k+' per 1,000 residents':'')+'</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.poverty_rate)?pct(p.poverty_rate):tr("noData"))+'</div><div class="k">Avg poverty rate</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(mi)?money(mi):tr("noData"))+'</div><div class="k">Median family income (US$, Atlas pipeline)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.no_vehicle_share)?pct(p.no_vehicle_share):tr("noData"))+'</div><div class="k">Households without a vehicle</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.life_expectancy)?p.life_expectancy:tr("noData"))+'</div><div class="k">Avg life expectancy (yrs)</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.snap_rate)?pct(p.snap_rate):tr("noData"))+'</div><div class="k">Households receiving SNAP</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(p.low_access_pop_share)?pct(p.low_access_pop_share):tr("noData"))+'</div><div class="k">Low-access population share</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(gw)?money(gw):tr("noData"))+'</div><div class="k">Modelled weekly grocery (US$, '+esc(gs)+')</div></div>'+
+      '<div class="stat"><div class="v">'+(!num(pp)?pct(pp):tr("noData"))+'</div><div class="k">Produce share of groceries ('+esc(ps)+')</div></div>'+
+      '</div>'+
+      ((worstL&&worstL.length)?('<div class="section-t">Hardest-hit neighborhoods</div><div class="worst">'+worstL.map(function(w){var wt=tierInfo(w.t);return '<div class="worst-row"><span class="worst-dot" style="background:'+wt.color+'"></span><span class="worst-n">'+esc(w.n)+'</span><span class="worst-s">'+w.s+'</span></div>';}).join("")+'</div>'):'')+
+      (!num(lp)?('<div class="section-t">'+tr("lettuceTest")+'</div><div class="narrative">'+text(tr("lettuceSentence"),{money:money2(lp),scope:esc(ls),color:lvColor,label:lvLabel,national:money2(USLET),note:esc(ln)})+'</div>'):'')+
+      '<div class="section-t">'+tr("compared")+'</div><div class="cmp-note"><i></i> '+tr("whiteLine")+'</div>'+
+      '<div class="cmp">'+
+        cmpRow(tr("cmpRate"),p.rate,USNAT,0,100,"",false,"",p.rate+" / 100")+
+        (!num(mi)?cmpRow(tr("cmpIncome"),Math.round(mi/1000),Math.round(USMED/1000),40,185,"k",true,"US $","US $"+fmt(Math.round(mi/1000))+"k"):"")+
+        (!num(p.life_expectancy)?cmpRow("Life expectancy",p.life_expectancy,USX.life||78.6,65,85,"",true,"",p.life_expectancy+" yrs"):"")+
+        (!num(lp)?cmpRow(tr("cmpLettuce"),lp,USLET,2,6.5,"",false,"US $",money2(lp)):"")+
+      '</div>'+
+      '<div class="p-foot">'+tr("panelFoot")+'</div>';
+    wirePanelNav();
+    var cd=document.getElementById("copydata"); if(cd) cd.onclick=function(){copyPlain(cd, buildCountyCopyText(p));};
+    var cl=document.getElementById("copylink"); if(cl) cl.onclick=function(){copyPlain(cl, location.origin+langUrl(p.code));};
+    var dl=document.getElementById("download-csv"); if(dl) dl.onclick=function(){
+      downloadCountiesCsv([ {properties:p} ], "foodgap-"+slugFile(displayName)+"-"+(p.state||slugFile(displayProv))+".csv");
+    };
+    panel.classList.add("open"); document.body.classList.add("panel-open");
+    closeFiltersQuietly();
+    setStatus(tr("statusRegionOpen")+": "+displayName);
+    if(moveFocus){var heading=document.getElementById("panel-title"); if(heading) heading.focus({preventScroll:true});}
+    try{ history.replaceState(null,"",langUrl(p.code)); }catch(e){}
+    clearSelected(); selectedDivision=p.code; if(hasDivisionSource()) map.setFeatureState({source:"divisions",id:p.code},{selected:true});
+    if(geom){var bb=bboxOf(geom); fitWithPanel([[bb[0],bb[1]],[bb[2],bb[3]]],{maxZoom:7,duration:dur(800)});}
+  }
+  function openByCode(code){
+    for(var i=0;i<US.features.length;i++){ if(US.features[i].properties.code===code){ selectDivision(US.features[i].properties,US.features[i].geometry); return; } }
+  }
+  function closePanel(){ panel.style.transition=""; panel.style.transform=""; if(MOB()&&window.__clearHover) window.__clearHover(); var wasOpen=panel.classList.contains("open"); panel.classList.remove("open"); document.body.classList.remove("panel-open"); curKey=null; clearSelected();
+    currentSelection=null; viewMode="national"; focusedState=null; updateFocusPaint();
+    try{ history.replaceState(null,"",langUrl(null)); }catch(e){}
+    if(wasOpen) fitSafe(HOME,{padding:MOB()?{top:130,bottom:24,left:12,right:12}:{top:120,bottom:44,left:44,right:40},duration:dur(700)}); }
+  document.getElementById("panel-close").onclick=closePanel;
+  (function(){ var sy=0,dy=0,drag=false;
+    panel.addEventListener("touchstart",function(e){ if(!MOB()||!panel.classList.contains("open"))return;
+      if(panel.scrollTop>2)return; sy=e.touches[0].clientY; dy=0; drag=true; panel.style.transition="none"; },{passive:true});
+    panel.addEventListener("touchmove",function(e){ if(!drag)return;
+      dy=e.touches[0].clientY-sy;
+      if(dy<0||panel.scrollTop>2){ drag=false; panel.style.transition=""; panel.style.transform=""; return; }
+      panel.style.transform="translateY("+dy+"px)"; },{passive:true});
+    panel.addEventListener("touchend",function(){ if(!drag)return; drag=false;
+      panel.style.transition=""; panel.style.transform="";
+      if(dy>110) closePanel(); dy=0; });
+    panel.addEventListener("touchcancel",function(){ drag=false; dy=0; panel.style.transition=""; panel.style.transform=""; });
+  })();
+  // mobile: swipe to dismiss the three modals — down from the top, or keep swiping up past the end
+  (function(){ [["modal"],["method"],["data-table-modal"],["feedback-modal"]].forEach(function(d){
+      var bg=document.getElementById(d[0]); if(!bg)return; var m=bg.querySelector(".modal"); if(!m)return;
+      var close=function(){ if(d[0]==="data-table-modal"&&typeof closeDataTable==="function") closeDataTable(); else bg.classList.remove("open"); };
+      var sy=null;
+      m.addEventListener("touchstart",function(e){ if(!MOB())return; sy=e.touches[0].clientY; },{passive:true});
+      m.addEventListener("touchend",function(e){ if(!MOB()||sy===null)return; var dy=e.changedTouches[0].clientY-sy; sy=null;
+        var sc=m.querySelector(".splash-scroll")||m;
+        var atTop=sc.scrollTop<=2, atBottom=sc.scrollTop+sc.clientHeight>=sc.scrollHeight-2;
+        if((dy>90&&atTop)||(dy<-90&&atBottom)) close(); },{passive:true});
+      m.addEventListener("touchcancel",function(){ sy=null; },{passive:true});
+  }); })();
+  function fb(text,done){var ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);done();}
+  function downloadUsCsv(){ downloadCountiesCsv(US.features, "foodgap-us-counties.csv"); }
+  (function(){
+    var b=document.getElementById("us-csv-btn"); if(b) b.onclick=downloadUsCsv;
+    var mb=document.getElementById("mobile-us-csv-btn"); if(mb) mb.onclick=downloadUsCsv;
+  })();
+
+  // ---- filters (all combinable) ----
+  var activeTiers={critical:true,severe:true,moderate:true,minor:true}, activeSetting="all", rateOn=false, rateVal=50;
+  var filterToast=document.getElementById("filter-toast"), filterReset=document.getElementById("filter-reset"), filterToastClose=document.getElementById("filter-toast-close");
+  function matchesActiveFilter(p){
+    return !!activeTiers[p.tier] && (activeSetting==="all" || p.setting===activeSetting) && (!rateOn || p.rate>=rateVal);
+  }
+  function filterMatchCount(){
+    var n=0; US.features.forEach(function(f){ if(matchesActiveFilter(f.properties)) n++; }); return n;
+  }
+  function updateFilterToast(count){
+    if(!filterToast) return;
+    filterToast.classList.toggle("open",count===0);
+  }
+  function syncFilterControls(){
+    document.querySelectorAll("#tier-chips .chip").forEach(function(c){var t=c.dataset.tier; c.classList.toggle("off",!activeTiers[t]); c.setAttribute("aria-pressed",activeTiers[t]?"true":"false");});
+    document.querySelectorAll("#setting-seg button").forEach(function(b){var on=b.dataset.setting===activeSetting; b.classList.toggle("active",on); b.setAttribute("aria-pressed",on?"true":"false");});
+    thRateOn.checked=rateOn; thRate.disabled=!rateOn; thRate.value=rateVal; thRateVal.textContent=rateVal;
+  }
+  function resetFilters(){
+    activeTiers={critical:true,severe:true,moderate:true,minor:true}; activeSetting="all"; rateOn=false; rateVal=50;
+    syncFilterControls(); applyFilter();
+  }
+  function applyFilter(){ if(!map.getLayer("division-fill")) return;
+    var tiers=Object.keys(activeTiers).filter(function(k){return activeTiers[k];});
+    var cf=["all",["in",["get","tier"],["literal",tiers]]];
+    if(activeSetting!=="all") cf.push(["==",["get","setting"],activeSetting]);
+    if(rateOn) cf.push([">=",["get","rate"],rateVal]);
+    map.setFilter("division-fill",cf); updateFilterToast(filterMatchCount()); updateFocusPaint(); }
+  document.querySelectorAll("#tier-chips .chip").forEach(function(c){ c.onclick=function(){var t=c.dataset.tier; activeTiers[t]=!activeTiers[t]; c.classList.toggle("off",!activeTiers[t]); c.setAttribute("aria-pressed",activeTiers[t]?"true":"false"); applyFilter();}; });
+  document.querySelectorAll("#setting-seg button").forEach(function(b){ b.onclick=function(){document.querySelectorAll("#setting-seg button").forEach(function(x){x.classList.remove("active"); x.setAttribute("aria-pressed","false");}); b.classList.add("active"); b.setAttribute("aria-pressed","true"); activeSetting=b.dataset.setting; applyFilter();}; });
+  var thRate=document.getElementById("th-rate"), thRateOn=document.getElementById("th-rate-on"), thRateVal=document.getElementById("th-rate-val");
+  thRateOn.onchange=function(){ rateOn=thRateOn.checked; thRate.disabled=!rateOn; applyFilter(); };
+  thRate.oninput=function(){ rateVal=+thRate.value; thRateVal.textContent=rateVal; applyFilter(); };
+  if(filterReset) filterReset.onclick=resetFilters;
+  if(filterToastClose) filterToastClose.onclick=function(){ if(filterToast) filterToast.classList.remove("open"); };
+
+  // ---- search: regions first, then any city/town (resolves to its division) ----
+  var CITY=window.CITY_INDEX||[];
+  var BYCODE={}; US.features.forEach(function(f){ BYCODE[f.properties.code]=f; });
+  var searchEl=document.getElementById("search"), resultsEl=document.getElementById("results"), searchHits=[];
+  function closeSearchResults(){
+    resultsEl.classList.remove("open"); resultsEl.innerHTML=""; searchEl.setAttribute("aria-expanded","false");
+  }
+  function renderSearchResults(){
+    if(!searchHits.length){
+      resultsEl.innerHTML='<div class="empty-result" role="status">'+esc(tr("searchNoResults"))+'</div>';
+      resultsEl.classList.add("open"); searchEl.setAttribute("aria-expanded","true");
+      return;
+    }
+    resultsEl.innerHTML=searchHits.map(function(h,i){
+      if(h.t==="s"){ var st=STATE_INDEX[h.name], ti=tierInfo(st&&st.tier); return '<button type="button" role="option" data-i="'+i+'"><div>'+esc(h.name)+'</div><div class="r-sub">State · '+fmt(st?st.county_count:0)+' desert counties · '+(st&&!num(st.rate)?st.rate+"/100":"—")+' ('+(ti?ti.label:"")+' aggregate)</div></button>'; }
+      if(h.t==="d"){ var ti=tierInfo(h.p.tier); return '<button type="button" role="option" data-i="'+i+'"><div>'+esc(nameOf(h.p))+'</div><div class="r-sub">'+esc(provinceOf(h.p))+' · '+pct(h.p.rate)+' '+tr("searchRegion")+' ('+ti.label+' '+tr("shareNationally")+')</div></button>'; }
+      var dp=BYCODE[h.code].properties;
+      return '<button type="button" role="option" data-i="'+i+'"><div>'+esc(h.name)+'</div><div class="r-sub">'+tr("cityTown")+' · '+tr("inWord")+' '+esc(nameOf(dp))+', '+esc(provinceOf(dp))+'</div></button>';
+    }).join("");
+    resultsEl.classList.add("open"); searchEl.setAttribute("aria-expanded","true");
+    resultsEl.querySelectorAll("button[data-i]").forEach(function(d){ d.onclick=function(){ closeSearchResults(); searchEl.value="";
+      var h=searchHits[+d.dataset.i];
+      if(h.t==="s") selectState(h.name);
+      else if(h.t==="d") selectDivision(h.p,h.g,true);
+      else { var f=BYCODE[h.code]; selectDivision(f.properties,f.geometry,true); } }; });
+  }
+  searchEl.oninput=function(){
+    var q=normQ(searchEl.value);
+    if(q.length<2){ closeSearchResults(); return; }
+    searchHits=[];
+    Object.keys(STATE_INDEX).forEach(function(sn){
+      if(searchHits.length>=3) return;
+      var dn=normQ(sn);
+      if(dn.indexOf(q)===0 || dn===q) searchHits.push({t:"s",name:sn});
+    });
+    Object.keys(STATE_INDEX).forEach(function(sn){
+      if(searchHits.length>=4) return;
+      var dn=normQ(sn);
+      if(dn.indexOf(q)>0){
+        var seen=false; for(var k=0;k<searchHits.length;k++){ if(searchHits[k].t==="s"&&searchHits[k].name===sn){ seen=true; break; } }
+        if(!seen) searchHits.push({t:"s",name:sn});
+      }
+    });
+    for(var i=0;i<US.features.length&&searchHits.length<8;i++){var p=US.features[i].properties;
+      var target=p.name+" "+(p.official||"")+" "+p.province+" "+(p.state||"")+" "+(p.name_fr||"")+" "+(p.official_fr||"")+" "+(p.province_fr||"");
+      if(normQ(target).indexOf(q)>-1) searchHits.push({t:"d",p:p,g:US.features[i].geometry});}
+    var seen={}; searchHits.forEach(function(h){ seen[normQ(nameOf(h.p))]=1; });
+    var pass=function(pred){
+      for(var j=0;j<CITY.length&&searchHits.length<9;j++){
+        var c=CITY[j], nm=normQ(c[0]);
+        if(seen[nm+"|"+c[1]]||seen[nm]) continue;
+        if(pred(nm) && BYCODE[c[1]]){ seen[nm+"|"+c[1]]=1; searchHits.push({t:"c",name:c[0],code:c[1]}); }
+      }
+    };
+    pass(function(nm){ return nm.indexOf(q)===0; });           // prefix matches first
+    pass(function(nm){ return nm.indexOf(q)>0; });             // then contains
+    renderSearchResults();
+  };
+  searchEl.onkeydown=function(e){
+    if(e.key==="ArrowDown"&&resultsEl.classList.contains("open")){
+      var first=resultsEl.querySelector("button[data-i]"); if(first){ e.preventDefault(); first.focus(); }
+    }
+  };
+  resultsEl.addEventListener("keydown",function(e){
+    if(e.key!=="ArrowDown"&&e.key!=="ArrowUp"&&e.key!=="Escape") return;
+    var buttons=[].slice.call(resultsEl.querySelectorAll("button[data-i]"));
+    if(e.key==="Escape"){ closeSearchResults(); searchEl.focus(); return; }
+    var i=buttons.indexOf(document.activeElement), next=e.key==="ArrowDown"?Math.min(i+1,buttons.length-1):Math.max(i-1,0);
+    if(buttons[next]){ e.preventDefault(); buttons[next].focus(); }
+  });
+  document.addEventListener("click",function(e){ if(!e.target.closest(".search")) closeSearchResults(); });
+
+  // ---- modals ----
+  var modal=document.getElementById("modal"), method=document.getElementById("method"), dataTableModal=document.getElementById("data-table-modal"), filtersEl=document.getElementById("filters");
+  var STORY_CODES=["2466","4718","1003","6101","6204"];
+  function openStoryStop(n){
+    var f=BYCODE[STORY_CODES[n-1]]; if(!f) return;
+    modal.classList.remove("open"); method.classList.remove("open"); closeDataTable(); setFiltersOpen(false); closeSearchResults();
+    selectDivision(f.properties,f.geometry,true);
+    setStatus(tr("storyPrefix")+" "+n+": "+nameOf(f.properties));
+  }
+  function closeFiltersQuietly(){
+    var fe=document.getElementById("filters"); if(fe) fe.classList.remove("open");
+    var btn=document.getElementById("mobile-filter-btn"); if(btn) btn.setAttribute("aria-expanded","false");
+  }
+  function openDataTable(){
+    closeFiltersQuietly();
+    renderDataTable();
+    dataTableModal.classList.add("open");
+    setStatus(tr("statusTableOpen"));
+    var input=document.getElementById("cmp-a"); if(input) input.focus();
+  }
+  function closeDataTable(){ dataTableModal.classList.remove("open"); }
+  function setFiltersOpen(open){
+    if(!filtersEl) return;
+    filtersEl.classList.toggle("open",open);
+    var btn=document.getElementById("mobile-filter-btn");
+    if(btn) btn.setAttribute("aria-expanded",open?"true":"false");
+    setStatus(open?tr("statusFiltersOpen"):tr("statusFiltersClosed"));
+  }
+  function toggleFilters(){ setFiltersOpen(!filtersEl.classList.contains("open")); }
+  document.getElementById("enter-btn").onclick=function(){ modal.classList.remove("open"); };
+  document.getElementById("about-btn").onclick=function(){ modal.classList.add("open"); };
+  document.getElementById("method-btn").onclick=function(){ method.classList.add("open"); };
+  document.getElementById("method-close").onclick=function(){ method.classList.remove("open"); };
+  document.getElementById("mobile-method-btn").onclick=function(){ closeFiltersQuietly(); method.classList.add("open"); };
+  document.getElementById("mobile-about-btn").onclick=function(){ closeFiltersQuietly(); modal.classList.add("open"); };
+  document.getElementById("table-btn").onclick=openDataTable;
+  document.getElementById("mobile-table-btn").onclick=openDataTable;
+  document.getElementById("mobile-filter-btn").onclick=toggleFilters;
+  var fcl=document.getElementById("filters-close"); if(fcl) fcl.onclick=toggleFilters;
+  document.getElementById("data-table-close").onclick=closeDataTable;
+  var cmpCsvBtn=document.getElementById("cmp-csv-btn"); if(cmpCsvBtn) cmpCsvBtn.onclick=downloadCompareCsv;
+  syncCmpCsvBtn();
+  var tableSearch=document.getElementById("table-search"); if(tableSearch) tableSearch.oninput=renderDataTable;
+  document.getElementById("skip-data").onclick=function(e){ e.preventDefault(); openDataTable(); };
+  // ---- feedback (mailto → AgentMail inbox; no API keys) ----
+  var feedbackModal=document.getElementById("feedback-modal");
+  var fbToast=document.getElementById("fb-toast"), fbToastTimer=null;
+  function showFbToast(msg){
+    if(!fbToast) return;
+    fbToast.textContent=msg; fbToast.classList.add("open");
+    if(fbToastTimer) clearTimeout(fbToastTimer);
+    fbToastTimer=setTimeout(function(){ fbToast.classList.remove("open"); },3200);
+  }
+  function openFeedback(){
+    if(!feedbackModal) return;
+    closeFiltersQuietly();
+    feedbackModal.classList.add("open");
+    var ta=document.getElementById("fb-msg"); if(ta) setTimeout(function(){ ta.focus(); },30);
+  }
+  function closeFeedback(){ if(feedbackModal) feedbackModal.classList.remove("open"); }
+  function sendFeedback(){
+    var nameEl=document.getElementById("fb-name"), emailEl=document.getElementById("fb-email"), msgEl=document.getElementById("fb-msg");
+    var name=(nameEl&&nameEl.value||"").trim();
+    var email=(emailEl&&emailEl.value||"").trim();
+    var msg=(msgEl&&msgEl.value||"").trim();
+    if(!msg){ if(msgEl) msgEl.focus(); showFbToast("Please enter a comment."); return; }
+    var subject="Food Gap feedback";
+    var body=[
+      "Name: "+(name||"(not provided)"),
+      "Reply-to: "+(email||"(not provided)"),
+      "",
+      "Message:",
+      msg,
+      "",
+      "---",
+      "Page: "+location.href,
+      "UA: "+String(navigator.userAgent||"").slice(0,180)
+    ].join("\n");
+    var draft="To: foodgap-feedback@agentmail.to\nSubject: "+subject+"\n\n"+body;
+    var href="mailto:foodgap-feedback@agentmail.to?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+    function copyFallback(note){
+      var done=function(){ showFbToast(note||"Email blocked — draft copied to clipboard."); };
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(draft).then(done).catch(function(){
+            showFbToast("Could not open email. Write to foodgap-feedback@agentmail.to");
+          });
+        } else {
+          var ta=document.createElement("textarea"); ta.value=draft; document.body.appendChild(ta); ta.select();
+          try{ document.execCommand("copy"); done(); }catch(e){ showFbToast("Could not open email. Write to foodgap-feedback@agentmail.to"); }
+          document.body.removeChild(ta);
+        }
+      }catch(e){ showFbToast("Could not open email. Write to foodgap-feedback@agentmail.to"); }
+    }
+    if(href.length>1800){
+      closeFeedback();
+      copyFallback("Draft too long for mailto — copied to clipboard.");
+      return;
+    }
+    var opened=false;
+    try{
+      var a=document.createElement("a"); a.href=href; a.style.display="none";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      opened=true;
+    }catch(e){ opened=false; }
+    closeFeedback();
+    if(opened) showFbToast("Opening your email app…");
+    else copyFallback();
+  }
+  var feedbackBtn=document.getElementById("feedback-btn");
+  if(feedbackBtn) feedbackBtn.onclick=openFeedback;
+  var fbCancel=document.getElementById("fb-cancel"); if(fbCancel) fbCancel.onclick=closeFeedback;
+  var fbSend=document.getElementById("fb-send"); if(fbSend) fbSend.onclick=sendFeedback;
+  // lang toggle removed (US-only)
+  [modal,method,dataTableModal,feedbackModal].forEach(function(m){ if(!m) return; m.addEventListener("click",function(e){ if(e.target===m) m.classList.remove("open"); }); });
+  document.addEventListener("keydown",function(e){
+    var tag=(e.target&&e.target.tagName||"").toUpperCase();
+    var typing=tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(e.target&&e.target.isContentEditable);
+    if(!typing && !e.altKey && !e.metaKey && !e.ctrlKey && /^[1-5]$/.test(e.key)){ e.preventDefault(); openStoryStop(+e.key); return; }
+    if(e.key==="Escape"){
+      if(feedbackModal&&feedbackModal.classList.contains("open")){ closeFeedback(); return; }
+      closePanel(); modal.classList.remove("open"); method.classList.remove("open"); closeDataTable(); setFiltersOpen(false);
+      closeSearchResults();
+    }
+  });
+})();
+});
+</script>
+</body>
+</html>
