@@ -582,7 +582,7 @@ window.addEventListener("DOMContentLoaded",function(){
     window.scrollTo(0,0);
     window.addEventListener("load",function(){window.scrollTo(0,0);});
   }catch(e){}
-  var APP_VERSION="2.4";
+  var APP_VERSION="2.6";
   var US=window.US_DATA, USNAT=window.US_NATIONAL, USPEND=window.US_SPEND||{weekly:119,produce_pct:12.0}, USMED=window.US_MEDINC||78900, USX=window.USA_EXTRA||{}, USLET=window.US_LETTUCE||3.28;
   var esc=function(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");};
   var deacc=function(s){try{return s.normalize("NFD").replace(/[̀-ͯ]/g,"");}catch(e){return s;}};
