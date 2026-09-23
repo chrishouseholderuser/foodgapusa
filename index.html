@@ -1565,7 +1565,11 @@ window.addEventListener("DOMContentLoaded",function(){
     for(var i=0;i<US.features.length&&searchHits.length<8;i++){var p=US.features[i].properties;
       var target=p.name+" "+(p.official||"")+" "+p.province+" "+(p.state||"")+" "+(p.name_fr||"")+" "+(p.official_fr||"")+" "+(p.province_fr||"");
       if(normQ(target).indexOf(q)>-1) searchHits.push({t:"d",p:p,g:US.features[i].geometry});}
-    var seen={}; searchHits.forEach(function(h){ seen[normQ(nameOf(h.p))]=1; });
+    var seen={}; searchHits.forEach(function(h){
+      if(h.t==="s"){ seen[normQ(h.name)]=1; return; }
+      if(h.t==="d"&&h.p){ seen[normQ(nameOf(h.p))]=1; return; }
+      if(h.t==="c"){ seen[normQ(h.name)]=1; }
+    });
     var pass=function(pred){
       for(var j=0;j<CITY.length&&searchHits.length<9;j++){
         var c=CITY[j], nm=normQ(c[0]);
